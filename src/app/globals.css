@@ -1,26 +1,363 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   LOTUS GOLF CENTER — DESIGN SYSTEM
+   Navy đậm · Xanh lá golf · Trắng ngà · Vàng champagne · Xám đá
+   ============================================================ */
+
+@theme {
+  /* --- Brand primitives --- */
+  --color-navy-50: #eef3f7;
+  --color-navy-100: #d5e1ea;
+  --color-navy-200: #a9c2d3;
+  --color-navy-300: #7099b3;
+  --color-navy-400: #3f6d8c;
+  --color-navy-500: #1f4a66;
+  --color-navy-600: #14374e;
+  --color-navy-700: #0e2a3e;
+  --color-navy-800: #0a1f2e;
+  --color-navy-900: #06141e;
+  --color-navy-950: #030b12;
+
+  --color-golf-50: #eef6f1;
+  --color-golf-100: #d6ebdf;
+  --color-golf-200: #aed7c0;
+  --color-golf-300: #7dbb99;
+  --color-golf-400: #4e9271;
+  --color-golf-500: #2f6b4f;
+  --color-golf-600: #25563f;
+  --color-golf-700: #1d4433;
+  --color-golf-800: #163527;
+  --color-golf-900: #0f251b;
+
+  --color-champagne-50: #fbf8ef;
+  --color-champagne-100: #f5eed8;
+  --color-champagne-200: #ecdcb1;
+  --color-champagne-300: #dcc188;
+  --color-champagne-400: #cba95f;
+  --color-champagne-500: #b8912f;
+  --color-champagne-600: #97741f;
+  --color-champagne-700: #74591a;
+  --color-champagne-800: #574318;
+  --color-champagne-900: #3c2e12;
+
+  --color-ivory: #f9f7f1;
+  --color-ivory-deep: #f2eee3;
+
+  --color-stone-50: #f6f7f8;
+  --color-stone-100: #eceef0;
+  --color-stone-200: #dcdfe3;
+  --color-stone-300: #bfc5cc;
+  --color-stone-400: #98a1ab;
+  --color-stone-500: #78828e;
+  --color-stone-600: #5f6873;
+  --color-stone-700: #4b525c;
+  --color-stone-800: #3a4049;
+  --color-stone-900: #23272d;
+
+  /* --- Semantic tokens (light) --- */
+  --color-background: #ffffff;
+  --color-surface: #f9f7f1;
+  --color-surface-raised: #ffffff;
+  --color-foreground: #0e2a3e;
+  --color-muted: #5f6873;
+  --color-muted-surface: #f2f4f6;
+  --color-border: #e3e7eb;
+  --color-border-strong: #cdd4db;
+
+  --color-primary: #0e2a3e;
+  --color-on-primary: #ffffff;
+  --color-accent: #2f6b4f;
+  --color-on-accent: #ffffff;
+  --color-gold: #97741f;
+  --color-gold-soft: #dcc188;
+
+  --color-success: #1d7a4f;
+  --color-warning: #9a6b06;
+  --color-danger: #b02a24;
+  --color-info: #1f5f80;
+  --color-ring: #2f6b4f;
+
+  /* --- Typography --- */
+  --font-display: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* --- Radius --- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* --- Shadow (tinh tế, không đổ bóng nặng) --- */
+  --shadow-subtle: 0 1px 2px rgb(14 42 62 / 0.04), 0 1px 3px rgb(14 42 62 / 0.06);
+  --shadow-card: 0 2px 4px rgb(14 42 62 / 0.03), 0 8px 24px -12px rgb(14 42 62 / 0.14);
+  --shadow-lift: 0 4px 8px rgb(14 42 62 / 0.05), 0 18px 40px -18px rgb(14 42 62 / 0.22);
+  --shadow-overlay: 0 24px 60px -20px rgb(6 20 30 / 0.4);
+
+  /* --- Motion --- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Breakpoint bổ sung --- */
+  --breakpoint-xs: 26rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================================
+   Dark theme — bật bằng [data-theme="dark"] trên <html>
+   ============================================================ */
+[data-theme='dark'] {
+  --color-background: #06141e;
+  --color-surface: #0a1f2e;
+  --color-surface-raised: #0e2a3e;
+  --color-foreground: #f2eee3;
+  --color-muted: #a9bcc9;
+  --color-muted-surface: #0e2a3e;
+  --color-border: #17364a;
+  --color-border-strong: #23516d;
+
+  --color-primary: #f2eee3;
+  --color-on-primary: #06141e;
+  --color-accent: #4e9271;
+  --color-on-accent: #06141e;
+  --color-gold: #dcc188;
+  --color-gold-soft: #ecdcb1;
+
+  --color-success: #5cc48d;
+  --color-warning: #e0b451;
+  --color-danger: #ef8079;
+  --color-info: #7dc0e0;
+  --color-ring: #4e9271;
+
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   Base
+   ============================================================ */
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Focus ring nhất quán — không bao giờ bỏ outline */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  ::selection {
+    background-color: var(--color-champagne-200);
+    color: var(--color-navy-800);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 999px;
+    border: 3px solid var(--color-background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-stone-400);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   Components / utilities dùng lại
+   ============================================================ */
+@layer components {
+  .container-lotus {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    max-width: 80rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-lotus {
+      padding-inline: 2rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-lotus {
+      padding-inline: 2.5rem;
+    }
+  }
+
+  .section-y {
+    padding-block: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-y {
+      padding-block: 5.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .section-y {
+      padding-block: 7rem;
+    }
+  }
+
+  /* Nhãn nhỏ in hoa cho eyebrow của section */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+
+  .rule-gold::after {
+    content: '';
+    display: block;
+    width: 3rem;
+    height: 2px;
+    margin-top: 1rem;
+    background: linear-gradient(90deg, var(--color-gold), transparent);
+  }
+
+  .surface-grid {
+    background-image:
+      linear-gradient(
+        to right,
+        color-mix(in srgb, var(--color-border) 60%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-border) 60%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 64px 64px;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 0.6s var(--ease-out-soft) both;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s var(--ease-out-soft) both;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-muted-surface) 25%,
+      color-mix(in srgb, var(--color-muted-surface) 55%, var(--color-background)) 50%,
+      var(--color-muted-surface) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ============================================================
+   Reduced motion — tôn trọng tuyệt đối
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* In vé booking */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
 }
