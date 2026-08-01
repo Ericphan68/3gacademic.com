@@ -321,6 +321,7 @@ export interface AcademyProgram {
   summary: string;
   outcomes: string[];
   icon: string;
+  image: string;
 }
 
 export interface AcademyJourneyStep {

@@ -1,12 +1,14 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 import { Section, SectionHeader } from '@/components/common/section';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InitialsAvatar, Rating } from '@/components/ui/misc';
+import { BLUR_DATA_URL, MEDIA } from '@/constants/media';
 import { TESTIMONIALS } from '@/data/testimonials';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +28,19 @@ export function TestimonialsSection() {
   const visible = TESTIMONIALS.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   return (
-    <Section tone="ivory">
+    <Section tone="ivory" className="relative isolate overflow-hidden">
+      {/* Ảnh nền mờ, chỉ mang tính trang trí */}
+      <div className="absolute inset-0 -z-10" aria-hidden>
+        <Image
+          src={MEDIA.section.testimonial}
+          alt=""
+          fill
+          sizes="100vw"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          className="object-cover opacity-[0.07]"
+        />
+      </div>
       <SectionHeader
         eyebrow="Khách hàng nói gì"
         title="Điều khiến mọi người quay lại"

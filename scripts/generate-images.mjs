@@ -274,6 +274,20 @@ for (let i = 1; i <= 8; i++) {
   JOBS.push([`membership/${k}`, () => abstract({ w: 1000, h: 600, seed: 1400 + i * 31, hue: i })]);
 });
 
+// Academy — 12 chương trình đào tạo
+for (let i = 1; i <= 12; i++) {
+  const moods = ['studio', 'day', 'dawn', 'ivory', 'dusk'];
+  JOBS.push([
+    `academy/program-${i}`,
+    () => scene({ w: 1000, h: 700, mood: moods[i % moods.length], seed: 1500 + i * 41 }),
+  ]);
+}
+
+// Ảnh phụ trợ cho các section trang chủ
+JOBS.push(['service-culture', () => scene({ w: 1200, h: 1500, mood: 'ivory', seed: 1700 })]);
+JOBS.push(['app-backdrop', () => scene({ w: 1200, h: 900, mood: 'night', seed: 1710 })]);
+JOBS.push(['testimonial-bg', () => scene({ w: 1600, h: 900, mood: 'dusk', seed: 1720 })]);
+
 // Voucher (8 nhóm)
 ['new-member', 'flash-sale', 'off-peak', 'coach-package', 'fnb', 'event', 'corporate', 'gift'].forEach((k, i) => {
   JOBS.push([`vouchers/${k}`, () => abstract({ w: 900, h: 500, seed: 1600 + i * 37, hue: i + 1 })]);
@@ -284,7 +298,7 @@ JOBS.push(['og-default', () => scene({ w: 1200, h: 630, mood: 'dusk', seed: 1800
 
 async function main() {
   await mkdir(OUT, { recursive: true });
-  for (const sub of ['experience', 'coaches', 'events', 'food', 'tours', 'corporate', 'membership', 'vouchers']) {
+  for (const sub of ['experience', 'coaches', 'events', 'food', 'tours', 'corporate', 'membership', 'vouchers', 'academy']) {
     await mkdir(path.join(OUT, sub), { recursive: true });
   }
 

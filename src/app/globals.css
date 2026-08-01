@@ -225,6 +225,14 @@
     }
   }
 
+  /* Màn hình lớn: nới container để bố cục thoáng hơn và menu ngang đủ chỗ. */
+  @media (min-width: 1536px) {
+    .container-lotus {
+      max-width: 88rem;
+      padding-inline: 3rem;
+    }
+  }
+
   .section-y {
     padding-block: 4rem;
   }

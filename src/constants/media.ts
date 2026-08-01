@@ -29,6 +29,11 @@ export const MEDIA = {
     academy: '/images/facility-academy.jpg',
     networking: '/images/facility-networking.jpg',
   },
+  section: {
+    serviceCulture: '/images/service-culture.jpg',
+    appBackdrop: '/images/app-backdrop.jpg',
+    testimonial: '/images/testimonial-bg.jpg',
+  },
   ogDefault: '/images/og-default.jpg',
   logoMark: '/lotus-mark.svg',
 } as const;
@@ -56,6 +61,10 @@ export function tourImage(index: number): string {
 
 export function corporateImage(index: number): string {
   return `/images/corporate/pkg-${index}.jpg`;
+}
+
+export function academyImage(index: number): string {
+  return `/images/academy/program-${index}.jpg`;
 }
 
 export function membershipImage(tier: string): string {

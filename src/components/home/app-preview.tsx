@@ -9,9 +9,12 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import Image from 'next/image';
+
 import { Reveal } from '@/components/common/reveal';
 import { Section, SectionHeader } from '@/components/common/section';
 import { Badge } from '@/components/ui/badge';
+import { BLUR_DATA_URL, MEDIA } from '@/constants/media';
 import { APP_FEATURES } from '@/data/testimonials';
 
 const ICONS: Record<string, LucideIcon> = {
@@ -28,6 +31,22 @@ const ICONS: Record<string, LucideIcon> = {
 function PhoneMockup() {
   return (
     <div className="relative mx-auto w-[15rem] sm:w-[17rem]">
+      {/* Ảnh nền tạo chiều sâu phía sau điện thoại */}
+      <div
+        className="absolute -inset-10 -z-10 overflow-hidden rounded-[var(--radius-2xl)] opacity-45"
+        aria-hidden
+      >
+        <Image
+          src={MEDIA.section.appBackdrop}
+          alt=""
+          fill
+          sizes="24rem"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy-800)] via-[var(--color-navy-800)]/55 to-[var(--color-navy-800)]/85" />
+      </div>
       <div className="relative rounded-[2.25rem] border-[6px] border-[var(--color-navy-950)] bg-[var(--color-navy-900)] p-2 shadow-[var(--shadow-overlay)]">
         <div className="absolute top-2.5 left-1/2 h-5 w-24 -translate-x-1/2 rounded-full bg-[var(--color-navy-950)]" aria-hidden />
         <div className="overflow-hidden rounded-[1.75rem] bg-[var(--color-navy-800)]">

@@ -46,17 +46,20 @@ export function Header() {
       <div className="container-lotus flex h-16 items-center gap-4 md:h-[4.5rem]">
         <Logo inverse={inverse} />
 
-        <nav aria-label="Điều hướng chính" className="ml-2 hidden flex-1 2xl:block">
+        <nav aria-label="Điều hướng chính" className="ml-2 hidden min-w-0 flex-1 overflow-hidden xl:block">
           <ul className="flex items-center">
             {MAIN_NAV.map((item) => {
               const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+              // Bỏ "Trang chủ" khỏi menu ngang: logo đã dẫn về trang chủ,
+              // đồng thời nhường chỗ để 9 mục còn lại luôn nằm gọn trên một hàng.
+              if (item.href === '/') return null;
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'relative rounded-[var(--radius-sm)] px-2 py-2 text-[13px] font-medium whitespace-nowrap transition-colors 2xl:px-2.5',
+                      'relative rounded-[var(--radius-sm)] px-1.5 py-2 text-[12px] font-medium whitespace-nowrap transition-colors 2xl:px-2 2xl:text-[12.5px]',
                       inverse
                         ? 'text-white/85 hover:text-white'
                         : active
@@ -68,7 +71,7 @@ export function Header() {
                     {active ? (
                       <span
                         className={cn(
-                          'absolute inset-x-2 -bottom-0.5 h-0.5 rounded-full 2xl:inset-x-2.5',
+                          'absolute inset-x-1.5 -bottom-0.5 h-0.5 rounded-full 2xl:inset-x-2',
                           inverse ? 'bg-[var(--color-champagne-300)]' : 'bg-[var(--color-accent)]',
                         )}
                         aria-hidden
@@ -81,7 +84,7 @@ export function Header() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 2xl:ml-0 2xl:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 xl:ml-0 2xl:gap-1.5">
           <button
             type="button"
             onClick={toggleLocale}
@@ -154,7 +157,6 @@ export function Header() {
             >
               <Link href="/login" aria-label="Đăng nhập">
                 {hydrated ? <LogIn aria-hidden /> : <UserRound aria-hidden />}
-                <span className="hidden xl:inline">Đăng nhập</span>
               </Link>
             </Button>
           )}

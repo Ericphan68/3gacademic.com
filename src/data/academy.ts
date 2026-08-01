@@ -1,3 +1,4 @@
+import { academyImage } from '@/constants/media';
 import type { AcademyJourneyStep, AcademyProgram } from '@/types';
 
 export const ACADEMY_PROGRAMS: AcademyProgram[] = [
@@ -13,6 +14,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Nền tảng đầy đủ: cách cầm gậy, tư thế, nhịp swing và những cú đánh cơ bản nhất.',
     outcomes: ['Đánh trúng bóng ổn định', 'Hiểu cấu trúc một cú swing', 'Tự tin ra thảm tập một mình'],
     icon: 'Sprout',
+    image: academyImage(1),
   },
   {
     id: 'ac-02',
@@ -26,6 +28,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Học qua trò chơi có mục tiêu, chú trọng an toàn và duy trì hứng thú lâu dài.',
     outcomes: ['Thói quen vận động đều đặn', 'Kỹ năng golf cơ bản', 'Tinh thần thể thao và kỷ luật'],
     icon: 'Baby',
+    image: academyImage(2),
   },
   {
     id: 'ac-03',
@@ -39,6 +42,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Rà soát lại toàn bộ kỹ thuật và xây dựng một swing có thể lặp lại ổn định.',
     outcomes: ['Swing nhất quán hơn', 'Giảm cú đánh hỏng', 'Bắt đầu kiểm soát được cự ly'],
     icon: 'Users',
+    image: academyImage(3),
   },
   {
     id: 'ac-04',
@@ -52,6 +56,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Lộ trình rút gọn tập trung vào những gì bạn thật sự cần trong một buổi golf công việc.',
     outcomes: ['Chơi được sau 8 buổi', 'Nắm nghi thức trên sân', 'Lịch học linh hoạt theo tuần'],
     icon: 'Briefcase',
+    image: academyImage(4),
   },
   {
     id: 'ac-05',
@@ -65,6 +70,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Buổi học lẻ theo nhu cầu, phù hợp khi bạn muốn sửa một vấn đề cụ thể.',
     outcomes: ['Giải quyết một vấn đề rõ ràng', 'Không ràng buộc lộ trình', 'Chọn HLV tự do'],
     icon: 'UserRound',
+    image: academyImage(5),
   },
   {
     id: 'ac-06',
@@ -78,6 +84,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Học cùng nhóm với chi phí thấp hơn, không khí vui và có động lực duy trì.',
     outcomes: ['Chi phí hợp lý hơn', 'Có bạn tập cùng', 'Học được từ lỗi của người khác'],
     icon: 'UsersRound',
+    image: academyImage(6),
   },
   {
     id: 'ac-07',
@@ -91,6 +98,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Đọc độ dốc, kiểm soát lực và giữ nhịp ổn định trên mặt green tiêu chuẩn.',
     outcomes: ['Giảm 2–4 gậy putt mỗi vòng', 'Đọc green chính xác hơn', 'Nhịp gạt ổn định'],
     icon: 'CircleDot',
+    image: academyImage(7),
   },
   {
     id: 'ac-08',
@@ -104,6 +112,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Chip, pitch và bunker qua các tình huống mô phỏng thực tế có đo kết quả.',
     outcomes: ['Xử lý được bóng khó quanh green', 'Có quy trình chọn gậy', 'Ổn định điểm số'],
     icon: 'Flag',
+    image: academyImage(8),
   },
   {
     id: 'ac-09',
@@ -117,6 +126,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Tinh chỉnh swing dựa trên dữ liệu đo được, từng buổi chỉ thay đổi một yếu tố.',
     outcomes: ['Tăng cự ly ổn định', 'Đường bóng dễ đoán hơn', 'Hiểu số liệu cú đánh của mình'],
     icon: 'TrendingUp',
+    image: academyImage(9),
   },
   {
     id: 'ac-10',
@@ -130,6 +140,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Những điều luật và nghi thức bạn thật sự cần biết trước khi ra sân lớn lần đầu.',
     outcomes: ['Không lúng túng trên sân', 'Biết cách tính điểm', 'Ứng xử đúng mực với nhóm chơi'],
     icon: 'BookOpen',
+    image: academyImage(10),
   },
   {
     id: 'ac-11',
@@ -143,6 +154,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Chiến thuật quản trị vòng đấu, kiểm soát tâm lý và mô phỏng áp lực thi đấu.',
     outcomes: ['Giữ được phong độ cuối vòng', 'Có chiến thuật rõ ràng', 'Quen với áp lực thi đấu'],
     icon: 'Trophy',
+    image: academyImage(11),
   },
   {
     id: 'ac-12',
@@ -156,6 +168,7 @@ export const ACADEMY_PROGRAMS: AcademyProgram[] = [
     summary: 'Đo tốc độ đầu gậy, góc tấn công, spin và đường bóng, rồi điều chỉnh dựa trên dữ liệu.',
     outcomes: ['Biết chính xác vấn đề của mình', 'Điều chỉnh có căn cứ', 'Theo dõi tiến bộ bằng số'],
     icon: 'Radar',
+    image: academyImage(12),
   },
 ];
 

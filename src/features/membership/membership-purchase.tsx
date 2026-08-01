@@ -2,6 +2,7 @@
 
 import { addMonths } from 'date-fns';
 import { Check, Crown, Minus, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -16,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/overlays';
 import { SpecList } from '@/components/ui/misc';
+import { BLUR_DATA_URL } from '@/constants/media';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -98,13 +100,35 @@ export function MembershipPricing({ tiers }: { tiers: MembershipTier[] }) {
             <article
               key={tier.id}
               className={cn(
-                'flex h-full flex-col rounded-[var(--radius-lg)] border p-6 transition-all duration-300',
+                'flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border transition-all duration-300',
                 isFounder
                   ? 'border-[var(--color-champagne-300)] bg-[var(--color-navy-800)] text-[var(--color-champagne-50)]'
                   : 'border-[var(--color-border)] bg-[var(--color-surface-raised)] hover:-translate-y-1 hover:shadow-[var(--shadow-card)]',
                 isCurrent && !isFounder && 'border-[var(--color-accent)] ring-1 ring-[var(--color-accent)]',
               )}
             >
+              <div className="relative aspect-[16/7] overflow-hidden bg-[var(--color-muted-surface)]">
+                <Image
+                  src={tier.image}
+                  alt={`Hạng hội viên ${tier.name}`}
+                  fill
+                  sizes="(min-width: 1280px) 24vw, (min-width: 768px) 45vw, 92vw"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
+                  className="object-cover"
+                />
+                <div
+                  className={cn(
+                    'absolute inset-0',
+                    isFounder
+                      ? 'bg-gradient-to-t from-[var(--color-navy-800)] via-[var(--color-navy-800)]/45 to-transparent'
+                      : 'bg-gradient-to-t from-[var(--color-surface-raised)] via-[var(--color-surface-raised)]/35 to-transparent',
+                  )}
+                  aria-hidden
+                />
+              </div>
+
+              <div className="flex flex-1 flex-col p-6 pt-4">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
                   <h3 className={cn('font-[family-name:var(--font-display)] text-xl', isFounder && 'text-white')}>
@@ -175,6 +199,7 @@ export function MembershipPricing({ tiers }: { tiers: MembershipTier[] }) {
               >
                 {isCurrent ? 'Đang sử dụng' : `Chọn ${tier.name}`}
               </Button>
+              </div>
             </article>
           );
         })}

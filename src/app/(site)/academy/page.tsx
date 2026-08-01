@@ -1,4 +1,5 @@
 import { ArrowRight, Check, Clock, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { CoachCard } from '@/components/cards/coach-card';
@@ -10,7 +11,7 @@ import { Section, SectionHeader } from '@/components/common/section';
 import { StatTile } from '@/components/common/stat-tile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MEDIA } from '@/constants/media';
+import { BLUR_DATA_URL, MEDIA } from '@/constants/media';
 import {
   ACADEMY_ACHIEVEMENTS,
   ACADEMY_JOURNEY,
@@ -90,16 +91,28 @@ export default function AcademyPage() {
             const Icon = getIcon(program.icon);
             return (
               <Reveal key={program.id} delay={Math.min(index * 0.04, 0.24)}>
-                <article className="flex h-full flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
-                  <div className="mb-4 flex items-start justify-between gap-3">
-                    <span className="flex size-11 items-center justify-center rounded-full bg-[var(--color-golf-50)] text-[var(--color-accent)]">
-                      <Icon className="size-5" aria-hidden />
+                <article className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
+                  <div className="relative aspect-[16/9] overflow-hidden bg-[var(--color-muted-surface)]">
+                    <Image
+                      src={program.image}
+                      alt={`Chương trình ${program.name}`}
+                      fill
+                      sizes="(min-width: 1280px) 30vw, (min-width: 768px) 45vw, 92vw"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      className="object-cover transition-transform duration-500 ease-[var(--ease-out-soft)] group-hover:scale-[1.04]"
+                    />
+                    <span className="absolute top-3 right-3">
+                      <Badge variant="glass" size="sm">
+                        {LEVEL_LABELS[program.level]}
+                      </Badge>
                     </span>
-                    <Badge variant="neutral" size="sm">
-                      {LEVEL_LABELS[program.level]}
-                    </Badge>
+                    <span className="absolute bottom-3 left-3 flex size-10 items-center justify-center rounded-full bg-[var(--color-surface-raised)]/90 text-[var(--color-accent)] backdrop-blur-sm">
+                      <Icon className="size-4.5" aria-hidden />
+                    </span>
                   </div>
 
+                  <div className="flex flex-1 flex-col p-6">
                   <h3 className="text-lg">{program.name}</h3>
                   <p className="mt-2 text-sm text-[var(--color-muted)]">{program.summary}</p>
 
@@ -143,6 +156,7 @@ export default function AcademyPage() {
                         Đăng ký
                       </Link>
                     </Button>
+                  </div>
                   </div>
                 </article>
               </Reveal>
