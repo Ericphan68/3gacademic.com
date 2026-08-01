@@ -108,7 +108,8 @@ PORT=8080 npm run start
 | `npm run typecheck` | Kiểm tra TypeScript (`tsc --noEmit`) |
 | `npm run format` | Định dạng code bằng Prettier |
 | `npm run format:check` | Kiểm tra định dạng, không sửa |
-| `npm run generate:images` | Sinh lại bộ ảnh demo trong `public/images` |
+| `npm run fetch:photos` | Tải lại bộ ảnh thật từ Unsplash vào `public/images` |
+| `npm run generate:images` | Sinh bộ ảnh minh hoạ dự phòng (không cần mạng) |
 | `npm run verify` | Chạy lần lượt lint → typecheck → build |
 
 ---
@@ -344,7 +345,7 @@ Toast cho mọi thao tác · Loading/empty/error/skeleton state · Breadcrumb ·
 | **Booking / ví / voucher / hội viên / sự kiện / đơn F&B** | localStorage (Zustand persist) | `src/store/*` |
 | Tài khoản & đăng nhập | localStorage | `src/store/useAuthStore.ts` |
 | Yêu cầu doanh nghiệp / tour / liên hệ | localStorage | `src/store/useAccountStore.ts` (`leads`) |
-| Ảnh | SVG sinh sẵn → JPEG trong `public/images` | `scripts/generate-images.mjs` |
+| Ảnh | **Ảnh thật** tải sẵn vào `public/images` (nguồn Unsplash) | `scripts/fetch-photos.mjs` |
 | QR code | Ma trận minh hoạ, **không quét được** | `src/components/ui/misc.tsx` (`DemoQrCode`) |
 | Smart Assistant | Kịch bản cố định, **không phải AI** | `src/components/layout/smart-assistant.tsx` |
 
@@ -429,8 +430,8 @@ bị gỡ · `aria-label` / `aria-pressed` / `aria-current` / `aria-live` đúng
 tôn trọng `prefers-reduced-motion`.
 
 **Hiệu suất**: Server Component mặc định · `next/image` (AVIF/WebP, blur placeholder, `priority`
-đúng chỗ) · `next/font` với subset `vietnamese` · icon import theo tên · ảnh demo tổng cộng ~2 MB ·
-không dùng video nặng.
+đúng chỗ) · `next/font` với subset `vietnamese` · icon import theo tên · ảnh đã được cắt đúng tỷ lệ
+và nén sẵn · không dùng video nặng.
 
 ---
 

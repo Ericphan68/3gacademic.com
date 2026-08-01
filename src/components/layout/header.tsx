@@ -4,11 +4,11 @@ import { ArrowRight, LayoutDashboard, LogIn, LogOut, Moon, Search, Sun, UserRoun
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { DesktopNav } from './desktop-nav';
 import { Logo } from './logo';
 import { MobileNav } from './mobile-nav';
 
 import { Button } from '@/components/ui/button';
-import { MAIN_NAV } from '@/constants/navigation';
 import { useHydrated } from '@/hooks/useHydrated';
 import { useLocale } from '@/hooks/useLocale';
 import { useScrolled } from '@/hooks/useScrollPosition';
@@ -46,45 +46,9 @@ export function Header() {
       <div className="container-lotus flex h-16 items-center gap-4 md:h-[4.5rem]">
         <Logo inverse={inverse} />
 
-        <nav aria-label="Điều hướng chính" className="ml-2 hidden min-w-0 flex-1 overflow-hidden xl:block">
-          <ul className="flex items-center">
-            {MAIN_NAV.map((item) => {
-              const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-              // Bỏ "Trang chủ" khỏi menu ngang: logo đã dẫn về trang chủ,
-              // đồng thời nhường chỗ để 9 mục còn lại luôn nằm gọn trên một hàng.
-              if (item.href === '/') return null;
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={active ? 'page' : undefined}
-                    className={cn(
-                      'relative rounded-[var(--radius-sm)] px-1.5 py-2 text-[12px] font-medium whitespace-nowrap transition-colors 2xl:px-2 2xl:text-[12.5px]',
-                      inverse
-                        ? 'text-white/85 hover:text-white'
-                        : active
-                          ? 'text-[var(--color-accent)]'
-                          : 'text-[var(--color-foreground)] hover:text-[var(--color-accent)]',
-                    )}
-                  >
-                    {locale === 'vi' ? item.label : item.labelEn}
-                    {active ? (
-                      <span
-                        className={cn(
-                          'absolute inset-x-1.5 -bottom-0.5 h-0.5 rounded-full 2xl:inset-x-2',
-                          inverse ? 'bg-[var(--color-champagne-300)]' : 'bg-[var(--color-accent)]',
-                        )}
-                        aria-hidden
-                      />
-                    ) : null}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        <DesktopNav inverse={inverse} locale={locale} />
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 xl:ml-0 2xl:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0 lg:gap-1.5">
           <button
             type="button"
             onClick={toggleLocale}

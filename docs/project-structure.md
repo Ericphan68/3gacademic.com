@@ -50,10 +50,11 @@ typecheck**, không đợi phát hiện lúc chạy.
 lotus-golf-center/
 ├── docs/                        # Tài liệu dự án
 ├── public/
-│   ├── images/                  # Ảnh demo (sinh bằng scripts/generate-images.mjs)
+│   ├── images/                  # Ảnh thật (tải bằng scripts/fetch-photos.mjs)
 │   └── lotus-mark.svg
 ├── scripts/
-│   └── generate-images.mjs      # Sinh bộ ảnh demo bằng sharp
+│   ├── fetch-photos.mjs         # Tải ảnh thật từ Unsplash, cắt và nén bằng sharp
+│   └── generate-images.mjs      # Sinh ảnh minh hoạ dự phòng khi không có mạng
 └── src/
     ├── app/
     ├── components/
@@ -243,25 +244,33 @@ in hoa) · `.rule-gold` (gạch chân trang trí) · `.surface-grid` (nền lư�
 
 ---
 
-## 11. Ảnh demo
+## 11. Ảnh
 
-`scripts/generate-images.mjs` sinh 120 ảnh JPEG (~2 MB) từ SVG bằng `sharp`.
+Website dùng **ảnh chụp thật** (135 file, ~17 MB) đặt sẵn trong `public/images`.
 
-Lý do không dùng ảnh remote (Unsplash…) làm mặc định:
+Nguồn: [Unsplash](https://unsplash.com) — Unsplash License cho phép dùng miễn phí, kể cả cho mục
+đích thương mại, không bắt buộc ghi nguồn.
 
-- Ảnh remote có thể đổi hoặc biến mất → website demo bị vỡ.
-- Ảnh local giúp build và chạy offline, LCP ổn định, không phụ thuộc mạng.
-
-Sinh lại khi cần:
+Tải lại toàn bộ khi cần:
 
 ```bash
-npm run generate:images
+npm run fetch:photos
 ```
 
-**Khi có ảnh thật:** ghi đè file trong `public/images` (giữ nguyên tên), hoặc sửa `constants/media.ts`
-để trỏ sang CDN và thêm host vào `images.remotePatterns` trong `next.config.ts`.
+`scripts/fetch-photos.mjs` khai báo một thư viện ảnh (`PHOTOS`) rồi ánh xạ sang từng vị trí cụ thể
+trên site, cắt đúng tỷ lệ và nén bằng `sharp`. Muốn đổi ảnh cho một vị trí, chỉ cần sửa bản đồ đó.
 
----
+**Vì sao tải về thay vì trỏ thẳng URL Unsplash:**
+- Website chạy được offline, không phụ thuộc dịch vụ bên thứ ba khi build hoặc deploy.
+- LCP ổn định, không rủi ro ảnh bị đổi hoặc gỡ khỏi nguồn.
+- Hostinger phục vụ ảnh cùng domain, không tốn thêm DNS lookup.
+
+**Khi có ảnh chụp thật của Lotus:** ghi đè file cùng tên trong `public/images` là xong — không cần
+sửa dòng code nào. Hoặc sửa `constants/media.ts` để trỏ sang CDN riêng (nhớ thêm host vào
+`images.remotePatterns` trong `next.config.ts`).
+
+`scripts/generate-images.mjs` vẫn được giữ lại để sinh bộ ảnh minh hoạ dạng vector khi cần chạy
+hoàn toàn offline, không có mạng.
 
 ## 12. Quy ước đặt tên
 

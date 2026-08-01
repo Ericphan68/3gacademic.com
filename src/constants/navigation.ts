@@ -13,18 +13,140 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-/** Menu chính trên header desktop. */
-export const MAIN_NAV: NavItem[] = [
-  { label: 'Trang chủ', labelEn: 'Home', href: '/' },
-  { label: 'Trải nghiệm', labelEn: 'Experiences', href: '/experience' },
-  { label: 'Đặt lịch', labelEn: 'Booking', href: '/booking' },
-  { label: 'Academy', labelEn: 'Academy', href: '/academy' },
-  { label: 'Huấn luyện viên', labelEn: 'Coaches', href: '/coaches' },
-  { label: 'Hội viên', labelEn: 'Membership', href: '/membership' },
-  { label: 'Sự kiện', labelEn: 'Events', href: '/events' },
-  { label: 'Doanh nghiệp', labelEn: 'Corporate', href: '/corporate' },
-  { label: 'Golf Tour', labelEn: 'Golf Tour', href: '/golf-tour' },
-  { label: 'Về Lotus', labelEn: 'About', href: '/about' },
+/**
+ * Menu chính trên header desktop.
+ *
+ * Các mục có `children` sẽ hiển thị dạng dropdown khi hover hoặc focus.
+ * Gom nhóm giúp thanh menu chỉ còn 5 mục cấp một, luôn đủ chỗ trên một hàng
+ * và người dùng dễ quét hơn so với 10 mục phẳng.
+ */
+export interface MainNavEntry {
+  label: string;
+  labelEn: string;
+  href: Route;
+  children?: NavItem[];
+}
+
+export const MAIN_NAV: MainNavEntry[] = [
+  {
+    label: 'Trải nghiệm',
+    labelEn: 'Experiences',
+    href: '/experience',
+    children: [
+      {
+        label: 'Gói trải nghiệm',
+        labelEn: 'Experience packages',
+        href: '/experience',
+        description: '12 gói cho người mới đến khách VIP',
+      },
+      {
+        label: 'Đặt lịch ngay',
+        labelEn: 'Book now',
+        href: '/booking',
+        description: 'Chọn giờ, khu vực và huấn luyện viên',
+      },
+      {
+        label: 'F&B và Lounge',
+        labelEn: 'Food & Lounge',
+        href: '/food-and-lounge',
+        description: 'Đặt món giao tận thảm tập',
+      },
+    ],
+  },
+  {
+    label: 'Học golf',
+    labelEn: 'Learn',
+    href: '/academy',
+    children: [
+      {
+        label: 'Lotus Golf Academy',
+        labelEn: 'Academy',
+        href: '/academy',
+        description: '12 chương trình từ căn bản đến thi đấu',
+      },
+      {
+        label: 'Huấn luyện viên',
+        labelEn: 'Coaches',
+        href: '/coaches',
+        description: 'Tìm HLV theo chuyên môn và ngôn ngữ',
+      },
+    ],
+  },
+  {
+    label: 'Quyền lợi',
+    labelEn: 'Benefits',
+    href: '/membership',
+    children: [
+      {
+        label: 'Hội viên & Top-up',
+        labelEn: 'Membership',
+        href: '/membership',
+        description: '4 hạng, bonus tới 25% khi nạp ví',
+      },
+      {
+        label: 'Voucher & Ưu đãi',
+        labelEn: 'Vouchers',
+        href: '/vouchers',
+        description: 'Flash Sale, giờ thấp điểm, quà tặng',
+      },
+      {
+        label: 'Sự kiện & Giải đấu',
+        labelEn: 'Events',
+        href: '/events',
+        description: 'Giải đấu, workshop, networking',
+      },
+    ],
+  },
+  {
+    label: 'Doanh nghiệp',
+    labelEn: 'Business',
+    href: '/corporate',
+    children: [
+      {
+        label: 'Golf doanh nghiệp',
+        labelEn: 'Corporate golf',
+        href: '/corporate',
+        description: 'Corporate Golf Day, team-building',
+      },
+      {
+        label: 'Golf Tour',
+        labelEn: 'Golf Tour',
+        href: '/golf-tour',
+        description: '7 gói tour cho khách đoàn',
+      },
+      {
+        label: 'Cổng đối tác',
+        labelEn: 'Partner portal',
+        href: '/partner',
+        description: 'Hợp tác cùng Lotus',
+      },
+    ],
+  },
+  {
+    label: 'Về Lotus',
+    labelEn: 'About',
+    href: '/about',
+    children: [
+      {
+        label: 'Câu chuyện thương hiệu',
+        labelEn: 'Our story',
+        href: '/about',
+        description: 'Tầm nhìn, giá trị và đội ngũ',
+      },
+      {
+        label: 'Liên hệ',
+        labelEn: 'Contact',
+        href: '/contact',
+        description: 'Địa chỉ, hotline và chỉ đường',
+      },
+      {
+        label: 'Câu hỏi thường gặp',
+        labelEn: 'FAQ',
+        href: '/faq',
+        description: '11 nhóm câu hỏi có tìm kiếm',
+      },
+    ],
+  },
 ];
 
 /** Menu mobile được chia nhóm rõ ràng. */
@@ -33,6 +155,7 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
     title: 'Chơi golf',
     titleEn: 'Play',
     items: [
+      { label: 'Trang chủ', labelEn: 'Home', href: '/' },
       { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
       { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
       { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
