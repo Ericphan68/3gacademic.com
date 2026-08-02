@@ -1,12 +1,12 @@
 /**
- * Tải bộ ảnh thật từ Unsplash về /public/images.
+ * Tải bộ ảnh thật (Unsplash + Pexels) về /public/images.
  *
- * Vì sao tải về thay vì trỏ thẳng URL Unsplash:
+ * Vì sao tải về thay vì trỏ thẳng URL của nguồn ảnh:
  *  - Website chạy được offline, không phụ thuộc mạng bên thứ ba khi build/deploy.
  *  - LCP ổn định, không rủi ro ảnh bị đổi hoặc gỡ.
  *  - Hostinger phục vụ ảnh cùng domain, không tốn thêm DNS lookup.
  *
- * Nguồn: Unsplash (Unsplash License — dùng miễn phí, kể cả thương mại).
+ * Nguồn: Unsplash và Pexels — cả hai đều cho phép dùng miễn phí, kể cả thương mại.
  * Khi có ảnh chụp thật của Lotus: ghi đè file cùng tên trong /public/images.
  *
  * Chạy: npm run fetch:photos
@@ -18,7 +18,7 @@ import path from 'node:path';
 const OUT = path.join(process.cwd(), 'public', 'images');
 
 /* ============================================================
-   Thư viện ảnh — mỗi khoá là một ảnh gốc trên Unsplash
+   Thư viện ảnh — mỗi khoá là một ảnh gốc (mặc định Unsplash)
    ============================================================ */
 const PHOTOS = {
   // Sân golf & cảnh quan
@@ -42,8 +42,8 @@ const PHOTOS = {
 
   // Sân tập (driving range)
   rangeMan: '1670254626993-aa642e1d1736', // nam tập tại bay
-  rangeWoman: '1571158096385-a56767c1f57c', // nữ tập tại bay
-  rangeGirl: '1670254836361-17267c781d61', // bé gái tại bay
+  rangeWoman: '1622819219010-7721328f050b', // nữ trẻ, trang phục golf, đang swing
+  rangeGirl: { source: 'pexels', id: '9207395' }, // bé gái cầm gậy trên fairway
   rangeGroup: '1670254494696-909c4e429575', // nhóm người tại khu tập
   rangeWide: '1668131128182-ed938cf2c514', // toàn cảnh khu tập
   rangeMountain: '1783530558756-1d0709dee1c9', // khu tập nhìn ra núi
@@ -70,10 +70,21 @@ const PHOTOS = {
   saladPlate: '1505253716362-afaea1d3d1af', // salad đĩa trắng
 };
 
-/** Tạo URL Unsplash với kích thước và khung cắt mong muốn. */
+/**
+ * Tạo URL ảnh theo kích thước mong muốn.
+ * Chấp nhận hai dạng khai báo:
+ *  - chuỗi        -> ảnh Unsplash, giá trị là phần sau "photo-"
+ *  - { source, id } -> chỉ định rõ nguồn ('unsplash' | 'pexels')
+ */
 function url(key, w, h) {
-  const id = PHOTOS[key];
-  if (!id) throw new Error(`Khong tim thay anh: ${key}`);
+  const entry = PHOTOS[key];
+  if (!entry) throw new Error(`Khong tim thay anh: ${key}`);
+
+  const { source, id } = typeof entry === 'string' ? { source: 'unsplash', id: entry } : entry;
+
+  if (source === 'pexels') {
+    return `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`;
+  }
   return `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&crop=entropy&q=80&fm=jpg`;
 }
 
