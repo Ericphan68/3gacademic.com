@@ -60,7 +60,13 @@ export interface BookingContact {
   isFirstTime: boolean;
 }
 
-export type PaymentMethod = 'wallet' | 'transfer' | 'card' | 'at-center';
+export type PaymentMethod = 'wallet' | 'momo' | 'vnpay' | 'card' | 'transfer' | 'at-center';
+
+/** Trạng thái thanh toán của một booking. */
+export type PaymentStatus =
+  | 'paid' // đã thanh toán thành công
+  | 'pending' // chờ thanh toán (chuyển khoản chưa xác nhận)
+  | 'pay-later'; // trả tại quầy khi check-in
 
 export type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
 
@@ -96,6 +102,7 @@ export interface Booking {
   voucherCode: string | null;
   contact: BookingContact;
   paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
   price: BookingPriceBreakdown;
   status: BookingStatus;
   createdAt: string;

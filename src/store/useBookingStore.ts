@@ -6,20 +6,36 @@ import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '@/constants/site';
 import type { BookingContact, BookingDraft, BookingExperienceType, PaymentMethod, ZoneId } from '@/types';
 
+/* ============================================================
+   LUỒNG ĐẶT LỊCH — 3 BƯỚC
+   1. Chọn lịch (trải nghiệm, HLV, ngày, giờ, khách, khu vực)
+   2. Thông tin & dịch vụ (liên hệ, add-on, voucher)
+   3. Kiểm tra & xác nhận
+   ============================================================ */
+
 export const BOOKING_STEPS = [
-  { id: 1, key: 'experience', label: 'Trải nghiệm' },
-  { id: 2, key: 'date', label: 'Ngày' },
-  { id: 3, key: 'time', label: 'Giờ' },
-  { id: 4, key: 'zone', label: 'Khu vực' },
-  { id: 5, key: 'coach', label: 'Huấn luyện viên' },
-  { id: 6, key: 'guests', label: 'Khách & dịch vụ' },
-  { id: 7, key: 'voucher', label: 'Ưu đãi' },
-  { id: 8, key: 'contact', label: 'Thông tin' },
-  { id: 9, key: 'review', label: 'Xác nhận' },
-  { id: 10, key: 'done', label: 'Hoàn tất' },
+  { id: 1, key: 'schedule', label: 'Chọn lịch' },
+  { id: 2, key: 'customer', label: 'Thông tin' },
+  { id: 3, key: 'review', label: 'Xác nhận' },
 ] as const;
 
 export const TOTAL_BOOKING_STEPS = BOOKING_STEPS.length;
+
+/** Nhóm thông tin → bước cần quay lại khi bấm “Chỉnh sửa” ở màn xác nhận. */
+export const EDIT_STEP: Record<
+  'experience' | 'coach' | 'date' | 'time' | 'zone' | 'guests' | 'addOns' | 'contact' | 'voucher',
+  number
+> = {
+  experience: 1,
+  coach: 1,
+  date: 1,
+  time: 1,
+  zone: 1,
+  guests: 1,
+  addOns: 2,
+  contact: 2,
+  voucher: 2,
+};
 
 const EMPTY_CONTACT: BookingContact = {
   fullName: '',
@@ -47,7 +63,7 @@ export const INITIAL_DRAFT: BookingDraft = {
 
 interface BookingState {
   draft: BookingDraft;
-  /** Mã booking vừa tạo, dùng cho bước 10. */
+  /** Mã booking vừa tạo, dùng cho màn thành công. */
   lastBookingCode: string | null;
   setStep: (step: number) => void;
   nextStep: () => void;
@@ -87,8 +103,8 @@ export const useBookingStore = create<BookingState>()(
           draft: {
             ...state.draft,
             experienceType: type,
+            // Gợi ý khu vực phù hợp nếu khách chưa tự chọn khu vực khác.
             zoneId: state.draft.zoneId ?? suggestedZone,
-            coachId: type === 'coaching' ? state.draft.coachId : state.draft.coachId,
           },
         })),
 
@@ -111,7 +127,9 @@ export const useBookingStore = create<BookingState>()(
       setUseWallet: (use) => set((state) => ({ draft: { ...state.draft, useWallet: use } })),
       setContact: (patch) =>
         set((state) => ({ draft: { ...state.draft, contact: { ...state.draft.contact, ...patch } } })),
-      setPaymentMethod: (method) => set((state) => ({ draft: { ...state.draft, paymentMethod: method } })),
+      // Chọn ví Lotus đồng nghĩa dùng số dư ví để trừ vào tổng.
+      setPaymentMethod: (method) =>
+        set((state) => ({ draft: { ...state.draft, paymentMethod: method, useWallet: method === 'wallet' } })),
       setAcceptedTerms: (accepted) => set((state) => ({ draft: { ...state.draft, acceptedTerms: accepted } })),
       setLastBookingCode: (code) => set({ lastBookingCode: code }),
 
@@ -119,7 +137,15 @@ export const useBookingStore = create<BookingState>()(
     }),
     {
       name: STORAGE_KEYS.bookingDraft,
-      version: 1,
+      // v2: rút gọn từ 10 bước xuống 3 bước — reset con trỏ bước của draft cũ.
+      version: 2,
+      migrate: (persisted, version) => {
+        const state = (persisted ?? {}) as Partial<Pick<BookingState, 'draft' | 'lastBookingCode'>>;
+        if (version < 2 && state.draft) {
+          state.draft = { ...INITIAL_DRAFT, ...state.draft, step: 1 };
+        }
+        return state as Pick<BookingState, 'draft' | 'lastBookingCode'>;
+      },
     },
   ),
 );
@@ -128,29 +154,35 @@ export const useBookingStore = create<BookingState>()(
 export function canAdvance(draft: BookingDraft): boolean {
   switch (draft.step) {
     case 1:
-      return draft.experienceType !== null;
+      // Cần có trải nghiệm, ngày và giờ. Khu vực & số khách luôn có giá trị mặc định.
+      return draft.experienceType !== null && draft.date !== null && draft.time !== null;
     case 2:
-      return draft.date !== null;
+      return isContactValid(draft.contact);
     case 3:
-      return draft.time !== null;
-    case 4:
-      return draft.zoneId !== null;
-    case 5:
-      return true; // "Không cần HLV" là lựa chọn hợp lệ
-    case 6:
-      return draft.guests >= 1;
-    case 7:
-      return true;
-    case 8:
-      return (
-        draft.contact.fullName.trim().length >= 2 &&
-        /^0\d{9}$/.test(draft.contact.phone.trim()) &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contact.email.trim()) &&
-        draft.acceptedTerms
-      );
-    case 9:
       return true;
     default:
       return false;
   }
+}
+
+/** Thông tin liên hệ hợp lệ: họ tên, số điện thoại VN, email. */
+export function isContactValid(contact: BookingContact): boolean {
+  return (
+    contact.fullName.trim().length >= 2 &&
+    /^0\d{9}$/.test(contact.phone.trim()) &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())
+  );
+}
+
+/** Khách đã nhập dữ liệu đáng kể chưa — dùng để cảnh báo trước khi rời trang. */
+export function hasDraftProgress(draft: BookingDraft): boolean {
+  return Boolean(
+    draft.date ||
+      draft.time ||
+      draft.coachId ||
+      draft.contact.fullName.trim() ||
+      draft.contact.phone.trim() ||
+      draft.contact.email.trim() ||
+      Object.keys(draft.addOns).length > 0,
+  );
 }

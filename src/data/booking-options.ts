@@ -224,8 +224,18 @@ export const TOP_UP_PRESETS = [
 ];
 
 export const PAYMENT_METHODS = [
-  { id: 'wallet', name: 'Ví Lotus', description: 'Thanh toán bằng số dư Top-up, áp dụng ưu đãi hội viên.', icon: 'Wallet' },
-  { id: 'transfer', name: 'Chuyển khoản', description: 'Nhận thông tin chuyển khoản sau khi xác nhận đặt lịch.', icon: 'Landmark' },
-  { id: 'card', name: 'Thẻ ngân hàng', description: 'Thanh toán bằng thẻ nội địa hoặc thẻ quốc tế.', icon: 'CreditCard' },
+  { id: 'wallet', name: 'Ví Lotus', description: 'Trừ trực tiếp từ số dư ví, áp dụng ưu đãi hội viên.', icon: 'Wallet' },
+  { id: 'momo', name: 'Ví MoMo', description: 'Quét mã hoặc mở app MoMo để thanh toán ngay.', icon: 'Smartphone' },
+  { id: 'vnpay', name: 'VNPay QR', description: 'Quét VNPay QR bằng app ngân hàng bất kỳ.', icon: 'QrCode' },
+  { id: 'card', name: 'Thẻ ngân hàng', description: 'Thẻ nội địa NAPAS hoặc Visa/Mastercard/JCB.', icon: 'CreditCard' },
+  { id: 'transfer', name: 'Chuyển khoản', description: 'Chuyển khoản ngân hàng theo mã đặt lịch.', icon: 'Landmark' },
   { id: 'at-center', name: 'Thanh toán tại trung tâm', description: 'Giữ chỗ trước, thanh toán khi đến check-in.', icon: 'Store' },
 ] as const;
+
+/** Thông tin tài khoản nhận chuyển khoản (demo). */
+export const BANK_TRANSFER_INFO = {
+  bankName: 'Vietcombank (VCB)',
+  branch: 'CN TP. Hồ Chí Minh',
+  accountName: 'CONG TY TNHH LOTUS GOLF CENTER',
+  accountNumber: '0071 0001 23456',
+} as const;

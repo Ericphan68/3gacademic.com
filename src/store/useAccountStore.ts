@@ -40,6 +40,7 @@ interface AccountState {
   addBooking: (booking: Booking) => void;
   cancelBooking: (id: string) => void;
   rescheduleBooking: (id: string, date: string, time: string) => void;
+  markBookingPaid: (id: string) => void;
   addTransaction: (tx: Omit<WalletTransaction, 'id' | 'createdAt'>) => void;
   addVoucher: (voucher: Omit<OwnedVoucher, 'id' | 'acquiredAt'>) => void;
   useVoucher: (code: string) => void;
@@ -76,6 +77,7 @@ const EMPTY = {
   | 'addBooking'
   | 'cancelBooking'
   | 'rescheduleBooking'
+  | 'markBookingPaid'
   | 'addTransaction'
   | 'addVoucher'
   | 'useVoucher'
@@ -107,6 +109,13 @@ export const useAccountStore = create<AccountState>()(
         set((state) => ({
           bookings: state.bookings.map((booking) =>
             booking.id === id ? { ...booking, date, time } : booking,
+          ),
+        })),
+
+      markBookingPaid: (id) =>
+        set((state) => ({
+          bookings: state.bookings.map((booking) =>
+            booking.id === id ? { ...booking, paymentStatus: 'paid' as const } : booking,
           ),
         })),
 

@@ -1,12 +1,11 @@
 'use client';
 
-import { Check, Info, Sparkles, UserX } from 'lucide-react';
+import { Check, Sparkles, UserX } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
-import { getIcon } from '@/components/common/icon-registry';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox, Field, Input, Label, QuantityStepper, Select, Textarea } from '@/components/ui/form-fields';
+import { Field, Select } from '@/components/ui/form-fields';
 import { Rating } from '@/components/ui/misc';
 import { BLUR_DATA_URL } from '@/constants/media';
 import { LANGUAGE_LABELS, SPECIALTY_LABELS } from '@/data/coaches';
@@ -14,10 +13,10 @@ import { getNextAvailability } from '@/lib/availability';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { bookingOptionService, coachService } from '@/services/catalogService';
-import type { BookingContact, CoachLanguage, CoachSpecialty, ZoneId } from '@/types';
+import type { CoachLanguage, CoachSpecialty, ZoneId } from '@/types';
 
 /* ============================================================
-   Bước 4 — Chọn khu vực
+   Chọn khu vực tập luyện
    ============================================================ */
 
 export function StepZone({ value, onChange }: { value: ZoneId | null; onChange: (zone: ZoneId) => void }) {
@@ -85,7 +84,7 @@ export function StepZone({ value, onChange }: { value: ZoneId | null; onChange: 
 }
 
 /* ============================================================
-   Bước 5 — Chọn huấn luyện viên
+   Chọn huấn luyện viên
    ============================================================ */
 
 export function StepCoach({
@@ -258,213 +257,6 @@ export function StepCoach({
           })}
         </ul>
       )}
-    </div>
-  );
-}
-
-/* ============================================================
-   Bước 6 — Số khách và dịch vụ bổ sung
-   ============================================================ */
-
-export function StepGuests({
-  guests,
-  addOns,
-  onGuestsChange,
-  onAddOnChange,
-}: {
-  guests: number;
-  addOns: Record<string, number>;
-  onGuestsChange: (guests: number) => void;
-  onAddOnChange: (id: string, quantity: number) => void;
-}) {
-  const items = bookingOptionService.getAddOns();
-
-  return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
-        <div>
-          <p className="text-base font-medium">Số khách</p>
-          <p className="mt-1 text-sm text-[var(--color-muted)]">
-            Giá trải nghiệm được tính theo số khách. Dịch vụ bổ sung tính riêng theo số lượng bạn chọn.
-          </p>
-        </div>
-        <QuantityStepper value={guests} onChange={onGuestsChange} min={1} max={20} label="số khách" />
-      </div>
-
-      <div>
-        <p className="mb-4 text-base font-medium">Dịch vụ bổ sung</p>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {items.map((item) => {
-            const quantity = addOns[item.id] ?? 0;
-            const Icon = getIcon(item.icon);
-
-            return (
-              <li
-                key={item.id}
-                className={cn(
-                  'flex items-start gap-4 rounded-[var(--radius-lg)] border p-4 transition-colors',
-                  quantity > 0 ? 'border-[var(--color-accent)] bg-[var(--color-golf-50)]' : 'border-[var(--color-border)]',
-                )}
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-muted-surface)] text-[var(--color-accent)]">
-                  <Icon className="size-4" aria-hidden />
-                </span>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{item.name}</p>
-                  <p className="mt-0.5 text-xs text-[var(--color-muted)]">{item.description}</p>
-                  <p className="mt-1.5 text-sm font-medium">
-                    {formatCurrency(item.price)}
-                    <span className="font-normal text-[var(--color-muted)]"> / {item.unit}</span>
-                  </p>
-                </div>
-
-                <QuantityStepper
-                  value={quantity}
-                  onChange={(next) => onAddOnChange(item.id, next)}
-                  min={0}
-                  max={item.max}
-                  label={item.name}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
-   Bước 8 — Thông tin khách hàng
-   ============================================================ */
-
-export function StepContact({
-  contact,
-  acceptedTerms,
-  onContactChange,
-  onTermsChange,
-}: {
-  contact: BookingContact;
-  acceptedTerms: boolean;
-  onContactChange: (patch: Partial<BookingContact>) => void;
-  onTermsChange: (accepted: boolean) => void;
-}) {
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  const nameError =
-    touched.fullName && contact.fullName.trim().length < 2 ? 'Vui lòng nhập họ tên đầy đủ' : undefined;
-  const phoneError =
-    touched.phone && !/^0\d{9}$/.test(contact.phone.trim())
-      ? 'Số điện thoại gồm 10 chữ số, bắt đầu bằng 0'
-      : undefined;
-  const emailError =
-    touched.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())
-      ? 'Email chưa đúng định dạng'
-      : undefined;
-
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Họ và tên" htmlFor="booking-name" required error={nameError}>
-          <Input
-            id="booking-name"
-            value={contact.fullName}
-            onChange={(event) => onContactChange({ fullName: event.target.value })}
-            onBlur={() => setTouched((prev) => ({ ...prev, fullName: true }))}
-            placeholder="Nguyễn Văn A"
-            autoComplete="name"
-            invalid={Boolean(nameError)}
-          />
-        </Field>
-
-        <Field label="Số điện thoại" htmlFor="booking-phone" required error={phoneError}>
-          <Input
-            id="booking-phone"
-            type="tel"
-            inputMode="numeric"
-            value={contact.phone}
-            onChange={(event) => onContactChange({ phone: event.target.value })}
-            onBlur={() => setTouched((prev) => ({ ...prev, phone: true }))}
-            placeholder="0901234567"
-            autoComplete="tel"
-            invalid={Boolean(phoneError)}
-          />
-        </Field>
-      </div>
-
-      <Field
-        label="Email"
-        htmlFor="booking-email"
-        required
-        error={emailError}
-        helper="Lotus gửi xác nhận đặt lịch và mã QR check-in qua email này."
-      >
-        <Input
-          id="booking-email"
-          type="email"
-          value={contact.email}
-          onChange={(event) => onContactChange({ email: event.target.value })}
-          onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
-          placeholder="email@cua-ban.com"
-          autoComplete="email"
-          invalid={Boolean(emailError)}
-        />
-      </Field>
-
-      <Field
-        label="Ghi chú cho Lotus"
-        htmlFor="booking-note"
-        helper="Ví dụ: cần huấn luyện viên nói tiếng Anh, tay thuận trái, đi cùng trẻ nhỏ…"
-      >
-        <Textarea
-          id="booking-note"
-          value={contact.note}
-          onChange={(event) => onContactChange({ note: event.target.value })}
-          placeholder="Điều gì giúp Lotus phục vụ bạn tốt hơn?"
-          maxLength={500}
-        />
-      </Field>
-
-      <div className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="booking-first-time"
-            checked={contact.isFirstTime}
-            onCheckedChange={(checked) => onContactChange({ isFirstTime: checked === true })}
-          />
-          <div>
-            <Label htmlFor="booking-first-time">Đây là lần đầu tôi đến Lotus</Label>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">
-              Chúng tôi sẽ bố trí nhân viên đón và hướng dẫn bạn từ đầu buổi.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3">
-          <Checkbox
-            id="booking-terms"
-            checked={acceptedTerms}
-            onCheckedChange={(checked) => onTermsChange(checked === true)}
-          />
-          <div>
-            <Label htmlFor="booking-terms" required>
-              Tôi đồng ý với điều khoản sử dụng và chính sách đổi lịch
-            </Label>
-            <p className="mt-1 text-xs text-[var(--color-muted)]">
-              Đổi lịch miễn phí trước 4 giờ. Huỷ đúng hạn được hoàn vào ví Lotus.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {contact.isFirstTime ? (
-        <p className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-golf-200)] bg-[var(--color-golf-50)] p-4 text-sm text-[var(--color-golf-800)]">
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Chào mừng bạn đến Lotus lần đầu. Bạn sẽ được đón tại sảnh và có nhân viên đi cùng trong suốt buổi
-          tập đầu tiên.
-        </p>
-      ) : null}
     </div>
   );
 }

@@ -140,6 +140,7 @@ export function buildDemoBookings(): Booking[] {
         isFirstTime: false,
       },
       paymentMethod: 'wallet',
+      paymentStatus: 'paid',
       price: {
         base: Math.round(template.total * 0.62),
         zoneSurcharge: template.zoneId === 'short-game' ? 50000 : 0,

@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/overlays';
 import { EmptyState } from '@/components/ui/states';
+import { PAYMENT_METHODS } from '@/data/booking-options';
 import { useHydrated } from '@/hooks/useHydrated';
 import { dateKey, getTimeSlots, isPastDate } from '@/lib/availability';
 import { formatCurrency, formatDateLong, formatDuration } from '@/lib/format';
@@ -31,6 +32,16 @@ const TABS: { value: BookingStatus; label: string }[] = [
   { value: 'completed', label: 'Đã hoàn thành' },
   { value: 'cancelled', label: 'Đã huỷ' },
 ];
+
+const PAY_BADGE: Record<string, { label: string; variant: 'success' | 'warning' | 'neutral' }> = {
+  paid: { label: 'Đã thanh toán', variant: 'success' },
+  pending: { label: 'Chờ thanh toán', variant: 'warning' },
+  'pay-later': { label: 'Thanh toán tại quầy', variant: 'neutral' },
+};
+
+const PAY_METHOD_LABELS: Record<string, string> = Object.fromEntries(
+  PAYMENT_METHODS.map((method) => [method.id, method.name]),
+);
 
 export function BookingsManager() {
   const hydrated = useHydrated();
@@ -151,6 +162,11 @@ export function BookingsManager() {
                                   ? 'Đã hoàn thành'
                                   : 'Đã huỷ'}
                             </Badge>
+                            {booking.paymentStatus && PAY_BADGE[booking.paymentStatus] ? (
+                              <Badge variant={PAY_BADGE[booking.paymentStatus].variant} size="sm">
+                                {PAY_BADGE[booking.paymentStatus].label}
+                              </Badge>
+                            ) : null}
                           </div>
 
                           <p className="mt-1 font-mono text-sm text-[var(--color-muted)]">{booking.code}</p>
@@ -238,8 +254,19 @@ export function BookingsManager() {
                         : 'Không có',
                   },
                   { label: 'Voucher', value: detail.voucherCode ?? 'Không dùng' },
-                  { label: 'Đã trừ ví', value: formatCurrency(detail.price.walletApplied) },
-                  { label: 'Còn phải thanh toán', value: formatCurrency(detail.price.total) },
+                  { label: 'Phương thức', value: PAY_METHOD_LABELS[detail.paymentMethod] ?? detail.paymentMethod },
+                  {
+                    label: 'Trạng thái thanh toán',
+                    value: detail.paymentStatus ? PAY_BADGE[detail.paymentStatus].label : '—',
+                  },
+                  {
+                    label: detail.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Cần thanh toán',
+                    value: formatCurrency(
+                      detail.paymentStatus === 'paid' && detail.paymentMethod === 'wallet'
+                        ? detail.price.walletApplied
+                        : detail.price.total,
+                    ),
+                  },
                 ]}
               />
 
