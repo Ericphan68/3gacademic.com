@@ -16,10 +16,21 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "generate:images": "node scripts/generate-images.mjs",
     "fetch:photos": "node scripts/fetch-photos.mjs",
-    "verify": "npm run lint && npm run typecheck && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run build",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "create-admin": "node scripts/create-admin.mjs"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.6.0",
+    "@prisma/client": "^6.19.3",
     "@radix-ui/react-accordion": "^1.2.20",
     "@radix-ui/react-avatar": "^1.2.6",
     "@radix-ui/react-checkbox": "^1.3.11",
@@ -36,10 +47,12 @@
     "@radix-ui/react-switch": "^1.3.7",
     "@radix-ui/react-tabs": "^1.1.21",
     "@radix-ui/react-tooltip": "^1.2.16",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "framer-motion": "^12.43.0",
+    "jose": "^6.2.8",
     "lucide-react": "^1.28.0",
     "next": "16.2.12",
     "react": "19.2.4",
@@ -53,6 +66,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -60,6 +74,7 @@
     "eslint-config-next": "16.2.12",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "prisma": "^6.19.3",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"
