@@ -3,10 +3,17 @@ import { Breadcrumbs } from './breadcrumbs';
 import { Section } from '@/components/common/section';
 import { CONTACT } from '@/constants/site';
 
+export interface LegalSubsection {
+  heading: string;
+  paragraphs?: string[];
+  bullets?: string[];
+}
+
 export interface LegalSection {
   heading: string;
   paragraphs?: string[];
   bullets?: string[];
+  subsections?: LegalSubsection[];
 }
 
 /** Bố cục dùng chung cho trang Chính sách bảo mật và Điều khoản sử dụng. */
@@ -80,6 +87,34 @@ export function LegalPage({
                     ))}
                   </ul>
                 ) : null}
+
+                {section.subsections?.map((sub, subIndex) => (
+                  <div key={sub.heading} className="mt-7">
+                    <h3 className="text-base font-medium text-[var(--color-foreground)] md:text-lg">
+                      {index + 1}.{subIndex + 1}. {sub.heading}
+                    </h3>
+
+                    {sub.paragraphs?.map((paragraph) => (
+                      <p key={paragraph} className="mt-3 leading-relaxed text-[var(--color-muted)]">
+                        {paragraph}
+                      </p>
+                    ))}
+
+                    {sub.bullets ? (
+                      <ul className="mt-3 space-y-2">
+                        {sub.bullets.map((bullet) => (
+                          <li key={bullet} className="flex gap-3 leading-relaxed text-[var(--color-muted)]">
+                            <span
+                              className="mt-2.5 size-1.5 shrink-0 rounded-full bg-[var(--color-champagne-400)]"
+                              aria-hidden
+                            />
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ))}
               </section>
             ))}
           </div>

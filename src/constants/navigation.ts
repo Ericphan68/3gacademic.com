@@ -46,6 +46,12 @@ export const MAIN_NAV: MainNavEntry[] = [
         description: 'Chọn giờ, khu vực và huấn luyện viên',
       },
       {
+        label: 'Bảng giá dịch vụ',
+        labelEn: 'Pricing',
+        href: '/bang-gia',
+        description: 'Giá sân, gói bóng tập và dịch vụ',
+      },
+      {
         label: 'F&B và Lounge',
         labelEn: 'Food & Lounge',
         href: '/food-and-lounge',
@@ -157,6 +163,7 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Trang chủ', labelEn: 'Home', href: '/' },
       { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
+      { label: 'Bảng giá dịch vụ', labelEn: 'Pricing', href: '/bang-gia', description: 'Giá sân, gói bóng tập và dịch vụ' },
       { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
       { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
     ],
@@ -226,6 +233,7 @@ export const FOOTER_NAV: NavGroup[] = [
     titleEn: 'Experience',
     items: [
       { label: 'Gói trải nghiệm', labelEn: 'Packages', href: '/experience' },
+      { label: 'Bảng giá dịch vụ', labelEn: 'Pricing', href: '/bang-gia' },
       { label: 'Đặt lịch', labelEn: 'Booking', href: '/booking' },
       { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge' },
       { label: 'Sự kiện', labelEn: 'Events', href: '/events' },
@@ -265,6 +273,7 @@ export const FOOTER_NAV: NavGroup[] = [
       { label: 'Câu chuyện', labelEn: 'Our story', href: '/about' },
       { label: 'Liên hệ', labelEn: 'Contact', href: '/contact' },
       { label: 'FAQ', labelEn: 'FAQ', href: '/faq' },
+      { label: 'Chính sách hợp tác', labelEn: 'Partnership policy', href: '/chinh-sach-hop-tac' },
       { label: 'Chính sách bảo mật', labelEn: 'Privacy', href: '/privacy' },
       { label: 'Điều khoản sử dụng', labelEn: 'Terms', href: '/terms' },
     ],

@@ -8,6 +8,7 @@ import { EXPERIENCES } from '@/data/experiences';
 const STATIC_ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }[] = [
   { path: '/', priority: 1, changeFrequency: 'weekly' },
   { path: '/experience', priority: 0.9, changeFrequency: 'weekly' },
+  { path: '/bang-gia', priority: 0.85, changeFrequency: 'monthly' },
   { path: '/booking', priority: 0.9, changeFrequency: 'daily' },
   { path: '/academy', priority: 0.85, changeFrequency: 'monthly' },
   { path: '/coaches', priority: 0.85, changeFrequency: 'weekly' },
@@ -25,6 +26,7 @@ const STATIC_ROUTES: { path: string; priority: number; changeFrequency: Metadata
   { path: '/register', priority: 0.4, changeFrequency: 'yearly' },
   { path: '/privacy', priority: 0.3, changeFrequency: 'yearly' },
   { path: '/terms', priority: 0.3, changeFrequency: 'yearly' },
+  { path: '/chinh-sach-hop-tac', priority: 0.5, changeFrequency: 'monthly' },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
