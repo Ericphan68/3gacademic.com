@@ -44,6 +44,21 @@ export const DEMO_CUSTOMER: User = {
   preferences: DEFAULT_PREFERENCES,
 };
 
+export const DEMO_ADMIN: User = {
+  id: 'user-demo-admin',
+  role: 'admin',
+  fullName: 'Quản trị Lotus',
+  email: 'admin@lotusgolf.vn',
+  phone: '0900000000',
+  avatarInitials: 'QT',
+  joinedAt: '2025-10-01',
+  membershipTier: null,
+  membershipExpiresAt: null,
+  walletBalance: 0,
+  loyaltyPoints: 0,
+  preferences: DEFAULT_PREFERENCES,
+};
+
 export const DEMO_COACH: User = {
   id: 'user-demo-coach',
   role: 'coach',
@@ -110,6 +125,10 @@ export const useAuthStore = create<AuthState>()(
         if (normalized === DEMO_COACH.email && password === DEMO_PASSWORD) {
           set({ user: { ...DEMO_COACH }, isAuthenticated: true });
           return { success: true, message: `Chào mừng trở lại, ${DEMO_COACH.fullName}.` };
+        }
+        if (normalized === DEMO_ADMIN.email && password === DEMO_PASSWORD) {
+          set({ user: { ...DEMO_ADMIN }, isAuthenticated: true });
+          return { success: true, message: `Chào mừng trở lại, ${DEMO_ADMIN.fullName}.` };
         }
 
         const registered = get().registeredUsers.find((item) => item.email === normalized);

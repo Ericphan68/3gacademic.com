@@ -73,6 +73,12 @@ export const DEMO_ACCOUNTS = [
     password: 'Demo123!',
     description: 'Xem Coach Portal: học viên, lịch dạy, hoa hồng và referral.',
   },
+  {
+    role: 'Quản trị viên',
+    email: 'admin@lotusgolf.vn',
+    password: 'Demo123!',
+    description: 'Khu quản trị: toàn bộ booking, đăng ký, khách hàng và doanh thu.',
+  },
 ] as const;
 
 export const STORAGE_KEYS = {

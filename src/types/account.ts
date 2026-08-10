@@ -5,7 +5,7 @@ import type { MembershipTierId, VoucherCategory } from './catalog';
    TÀI KHOẢN & DASHBOARD
    ============================================================ */
 
-export type UserRole = 'customer' | 'coach';
+export type UserRole = 'customer' | 'coach' | 'admin';
 export type Handedness = 'right' | 'left';
 export type GolfLevel = 'never' | 'beginner' | 'intermediate' | 'advanced';
 

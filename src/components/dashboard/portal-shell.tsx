@@ -33,7 +33,7 @@ export function PortalShell({
 }: {
   nav: readonly PortalNavItem[];
   title: string;
-  requiredRole?: 'customer' | 'coach';
+  requiredRole?: 'customer' | 'coach' | 'admin';
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -52,6 +52,12 @@ export function PortalShell({
     if (requiredRole === 'coach' && user.role !== 'coach') {
       toast.error('Khu vực dành cho huấn luyện viên', {
         description: 'Đăng nhập bằng tài khoản demo coach@lotusgolf.vn để xem Coach Portal.',
+      });
+      router.replace('/dashboard');
+    }
+    if (requiredRole === 'admin' && user.role !== 'admin') {
+      toast.error('Khu vực quản trị', {
+        description: 'Đăng nhập bằng tài khoản demo admin@lotusgolf.vn để xem khu quản trị.',
       });
       router.replace('/dashboard');
     }
@@ -94,7 +100,11 @@ export function PortalShell({
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{user.fullName}</p>
                 <p className="truncate text-xs text-[var(--color-muted)]">
-                  {user.role === 'coach' ? 'Huấn luyện viên' : 'Khách hàng'}
+                  {user.role === 'coach'
+                    ? 'Huấn luyện viên'
+                    : user.role === 'admin'
+                      ? 'Quản trị viên'
+                      : 'Khách hàng'}
                 </p>
               </div>
             </div>

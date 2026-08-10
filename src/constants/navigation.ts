@@ -217,6 +217,14 @@ export const DASHBOARD_NAV = [
   { label: 'Hồ sơ', href: '/dashboard/profile' as Route, icon: 'UserRound' },
 ] as const;
 
+/** Sidebar khu quản trị. */
+export const ADMIN_NAV = [
+  { label: 'Tổng quan', href: '/admin' as Route, icon: 'LayoutDashboard' },
+  { label: 'Booking', href: '/admin/bookings' as Route, icon: 'CalendarCheck' },
+  { label: 'Đăng ký', href: '/admin/registrations' as Route, icon: 'ReceiptText' },
+  { label: 'Khách hàng', href: '/admin/customers' as Route, icon: 'UsersRound' },
+] as const;
+
 /** Sidebar Coach Portal. */
 export const COACH_NAV = [
   { label: 'Tổng quan', href: '/coach-portal' as Route, icon: 'LayoutDashboard' },

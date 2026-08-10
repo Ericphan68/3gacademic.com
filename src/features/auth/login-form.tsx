@@ -37,8 +37,8 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '' } });
 
-  const redirectAfterLogin = (role: 'customer' | 'coach') => {
-    router.push(role === 'coach' ? '/coach-portal' : '/dashboard');
+  const redirectAfterLogin = (role: 'customer' | 'coach' | 'admin') => {
+    router.push(role === 'coach' ? '/coach-portal' : role === 'admin' ? '/admin' : '/dashboard');
   };
 
   const onSubmit = async (values: FormValues) => {

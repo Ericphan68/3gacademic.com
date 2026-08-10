@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         // Khu vực cá nhân không cần được index.
-        disallow: ['/dashboard', '/coach-portal', '/login', '/register', '/forgot-password'],
+        disallow: ['/dashboard', '/coach-portal', '/admin', '/login', '/register', '/forgot-password'],
       },
     ],
     sitemap: `${SITE.url}/sitemap.xml`,
