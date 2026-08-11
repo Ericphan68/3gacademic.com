@@ -9,7 +9,7 @@ import { FounderCountdown } from '@/features/membership/founder-countdown';
 import { MembershipCalculator } from '@/features/membership/membership-calculator';
 import { MembershipPricing } from '@/features/membership/membership-purchase';
 import { buildMetadata } from '@/lib/seo';
-import { membershipService } from '@/services/catalogService';
+import { getManagedTiers } from '@/server/services/membershipService';
 
 export const metadata = buildMetadata({
   title: 'Hội viên & Top-up',
@@ -20,8 +20,8 @@ export const metadata = buildMetadata({
   keywords: ['hội viên golf', 'thẻ hội viên sân tập golf', 'membership golf', 'top-up golf'],
 });
 
-export default function MembershipPage() {
-  const tiers = membershipService.getAll();
+export default async function MembershipPage() {
+  const tiers = await getManagedTiers();
   const founder = tiers.find((tier) => tier.id === 'founder');
 
   return (

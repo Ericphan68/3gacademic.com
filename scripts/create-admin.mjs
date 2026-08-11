@@ -7,6 +7,13 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// Nạp biến môi trường từ .env nếu có (production dùng env của host).
+try {
+  process.loadEnvFile();
+} catch {
+  // .env không tồn tại — dùng biến môi trường sẵn có.
+}
+
 const prisma = new PrismaClient();
 
 async function main() {

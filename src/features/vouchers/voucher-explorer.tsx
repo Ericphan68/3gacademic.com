@@ -15,7 +15,7 @@ import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { voucherCatalogService } from '@/services/catalogService';
 import { useAccountStore } from '@/store/useAccountStore';
-import type { VoucherCategory } from '@/types';
+import type { Voucher, VoucherCategory } from '@/types';
 
 const TABS = [
   { value: 'all', label: 'Tất cả' },
@@ -27,20 +27,24 @@ const TABS = [
 
 type TabValue = (typeof TABS)[number]['value'];
 
-export function VoucherExplorer() {
+export function VoucherExplorer({ catalog }: { catalog?: Voucher[] }) {
   const hydrated = useHydrated();
   const [tab, setTab] = useState<TabValue>('all');
   const [category, setCategory] = useState<VoucherCategory | 'all'>('all');
   const owned = useAccountStore((state) => state.vouchers);
 
-  const vouchers = useMemo(
-    () =>
-      voucherCatalogService.filter({
-        category,
-        tab: tab === 'mine' ? 'all' : tab,
-      }),
-    [category, tab],
-  );
+  const vouchers = useMemo(() => {
+    const activeTab = tab === 'mine' ? 'all' : tab;
+    // Không có dữ liệu từ server → dùng mock (giữ tương thích ngược).
+    if (!catalog) return voucherCatalogService.filter({ category, tab: activeTab });
+    return catalog.filter((voucher) => {
+      if (category !== 'all' && voucher.category !== category) return false;
+      if (activeTab === 'hot' && !voucher.hot) return false;
+      if (activeTab === 'ending' && voucher.soldQuantity / voucher.totalQuantity < 0.8) return false;
+      if (activeTab === 'member' && !voucher.memberOnly) return false;
+      return true;
+    });
+  }, [category, tab, catalog]);
 
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value as TabValue)}>

@@ -5,10 +5,12 @@ import { Logo } from './logo';
 import { NewsletterForm } from './newsletter-form';
 
 import { FOOTER_NAV } from '@/constants/navigation';
-import { CONTACT, SITE } from '@/constants/site';
+import { SITE } from '@/constants/site';
+import { getContactSettings } from '@/server/services/settingsService';
 
-export function Footer() {
+export async function Footer() {
   const year = 2026;
+  const contact = await getContactSettings();
 
   return (
     <footer className="border-t border-white/10 bg-[var(--color-navy-900)] text-[var(--color-navy-100)]">
@@ -27,31 +29,31 @@ export function Footer() {
             <ul className="mt-7 space-y-3 text-sm">
               <li className="flex gap-3">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-[var(--color-champagne-300)]" aria-hidden />
-                <span>{CONTACT.addressLine}</span>
+                <span>{contact.address}</span>
               </li>
               <li className="flex gap-3">
                 <Clock className="mt-0.5 size-4 shrink-0 text-[var(--color-champagne-300)]" aria-hidden />
-                <span>Mở cửa hằng ngày {CONTACT.openHours}</span>
+                <span>Mở cửa hằng ngày {contact.openHours}</span>
               </li>
               <li className="flex gap-3">
                 <Phone className="mt-0.5 size-4 shrink-0 text-[var(--color-champagne-300)]" aria-hidden />
                 <a
-                  href={`tel:${CONTACT.hotline.replace(/\s/g, '')}`}
+                  href={`tel:${contact.hotline.replace(/\s/g, '')}`}
                   className="transition-colors hover:text-white"
                 >
-                  {CONTACT.hotline}
+                  {contact.hotline}
                 </a>
               </li>
               <li className="flex gap-3">
                 <Mail className="mt-0.5 size-4 shrink-0 text-[var(--color-champagne-300)]" aria-hidden />
-                <a href={`mailto:${CONTACT.email}`} className="transition-colors hover:text-white">
-                  {CONTACT.email}
+                <a href={`mailto:${contact.email}`} className="transition-colors hover:text-white">
+                  {contact.email}
                 </a>
               </li>
               <li className="flex gap-3">
                 <MessageCircle className="mt-0.5 size-4 shrink-0 text-[var(--color-champagne-300)]" aria-hidden />
                 <a
-                  href={CONTACT.zalo}
+                  href={contact.zalo}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="transition-colors hover:text-white"

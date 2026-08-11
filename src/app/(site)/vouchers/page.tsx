@@ -6,7 +6,7 @@ import { StatTile } from '@/components/common/stat-tile';
 import { MEDIA } from '@/constants/media';
 import { VoucherExplorer } from '@/features/vouchers/voucher-explorer';
 import { buildMetadata } from '@/lib/seo';
-import { voucherCatalogService } from '@/services/catalogService';
+import { getManagedVouchers } from '@/server/services/voucherService';
 
 export const metadata = buildMetadata({
   title: 'Voucher và ưu đãi',
@@ -16,8 +16,8 @@ export const metadata = buildMetadata({
   keywords: ['voucher golf', 'ưu đãi golf', 'giảm giá sân tập golf', 'flash sale golf'],
 });
 
-export default function VouchersPage() {
-  const vouchers = voucherCatalogService.getAll();
+export default async function VouchersPage() {
+  const vouchers = await getManagedVouchers();
   const hotCount = vouchers.filter((voucher) => voucher.hot).length;
   const freeCount = vouchers.filter((voucher) => voucher.price === 0).length;
 
@@ -47,7 +47,7 @@ export default function VouchersPage() {
           title="Chọn ưu đãi phù hợp với bạn"
           description="Lưu voucher vào tài khoản để dùng sau, hoặc mua voucher quà tặng cho người thân."
         />
-        <VoucherExplorer />
+        <VoucherExplorer catalog={vouchers} />
       </Section>
 
       <Section tone="surface" className="!py-12">

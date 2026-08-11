@@ -4,8 +4,11 @@ import { Header } from './header';
 import { SearchDialog } from './search-dialog';
 import { SmartAssistant } from './smart-assistant';
 
+import { getHomeContent } from '@/server/services/contentService';
+
 /** Khung layout dùng cho toàn bộ trang public. */
-export function SiteShell({ children }: { children: React.ReactNode }) {
+export async function SiteShell({ children }: { children: React.ReactNode }) {
+  const { announcement } = await getHomeContent();
   return (
     <>
       <a
@@ -14,7 +17,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       >
         Bỏ qua điều hướng, tới nội dung chính
       </a>
-      <AnnouncementBar />
+      <AnnouncementBar
+        text={announcement.text}
+        ctaText={announcement.ctaText}
+        ctaLink={announcement.ctaLink}
+        enabled={announcement.enabled}
+      />
       <Header />
       <main id="main-content" className="min-h-[60vh]">
         {children}
