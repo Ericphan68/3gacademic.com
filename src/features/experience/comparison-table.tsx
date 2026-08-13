@@ -4,10 +4,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AUDIENCE_LABELS, EXPERIENCES } from '@/data/experiences';
 import { formatCurrency, formatDuration } from '@/lib/format';
+import type { ExperiencePackage } from '@/types';
 
 /** Bảng so sánh các gói trải nghiệm — cuộn ngang trên mobile. */
-export function ExperienceComparisonTable() {
-  const items = EXPERIENCES.filter((item) => item.featured || item.audiences.includes('beginner'));
+export function ExperienceComparisonTable({ source }: { source?: ExperiencePackage[] }) {
+  const items = (source ?? EXPERIENCES).filter(
+    (item) => item.featured || item.audiences.includes('beginner'),
+  );
 
   return (
     <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)]">

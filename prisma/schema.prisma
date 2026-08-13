@@ -831,6 +831,7 @@ model Testimonial {
 
 model Faq {
   id        String   @id @default(cuid())
+  key       String?  @unique // khớp id trong data mock (vd: beginner-1) để Admin ghi đè
   category  String?
   question  String
   answer    String

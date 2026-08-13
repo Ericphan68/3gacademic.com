@@ -7,9 +7,9 @@ import { Section } from '@/components/common/section';
 import { Button } from '@/components/ui/button';
 import { MEDIA } from '@/constants/media';
 import { CONTACT } from '@/constants/site';
-import { FAQS } from '@/data/faqs';
 import { FaqBrowser } from '@/features/faq/faq-browser';
 import { buildMetadata } from '@/lib/seo';
+import { getManagedFaqs } from '@/server/services/faqService';
 
 export const metadata = buildMetadata({
   title: 'Câu hỏi thường gặp',
@@ -20,7 +20,9 @@ export const metadata = buildMetadata({
   keywords: ['câu hỏi thường gặp golf', 'hướng dẫn chơi golf cho người mới', 'quy định sân tập golf'],
 });
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const faqs = await getManagedFaqs();
+
   return (
     <>
       <PageHero
@@ -33,8 +35,8 @@ export default function FaqPage() {
       />
 
       <Section>
-        <FaqBrowser />
-        <FaqJsonLd items={FAQS} />
+        <FaqBrowser catalog={faqs} />
+        <FaqJsonLd items={faqs} />
       </Section>
 
       <Section tone="surface" className="!py-14">

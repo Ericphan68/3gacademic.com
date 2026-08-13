@@ -8,21 +8,20 @@ import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/form-fields';
 import { EmptyState } from '@/components/ui/states';
 import { FAQ_GROUP_LABELS, FAQ_GROUP_ORDER, FAQS } from '@/data/faqs';
-import { matchesQuery } from '@/lib/utils';
-import { cn } from '@/lib/utils';
-import type { FaqGroup } from '@/types';
+import { cn, matchesQuery } from '@/lib/utils';
+import type { FaqGroup, FaqItem } from '@/types';
 
-export function FaqBrowser() {
+export function FaqBrowser({ catalog }: { catalog?: FaqItem[] }) {
   const [query, setQuery] = useState('');
   const [group, setGroup] = useState<FaqGroup | 'all'>('all');
 
   const results = useMemo(
     () =>
-      FAQS.filter((faq) => {
+      (catalog ?? FAQS).filter((faq) => {
         if (group !== 'all' && faq.group !== group) return false;
         return matchesQuery(query, faq.question, faq.answer);
       }),
-    [query, group],
+    [query, group, catalog],
   );
 
   const grouped = useMemo(() => {

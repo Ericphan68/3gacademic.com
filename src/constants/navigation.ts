@@ -221,11 +221,13 @@ export const DASHBOARD_NAV = [
 export const ADMIN_NAV = [
   { label: 'Tổng quan', href: '/admin' as Route, icon: 'LayoutDashboard' },
   { label: 'Booking', href: '/admin/bookings' as Route, icon: 'CalendarCheck' },
+  { label: 'Gói trải nghiệm', href: '/admin/experiences' as Route, icon: 'Sparkles' },
   { label: 'Hội viên', href: '/admin/memberships' as Route, icon: 'Crown' },
   { label: 'Voucher', href: '/admin/vouchers' as Route, icon: 'Ticket' },
   { label: 'Sự kiện', href: '/admin/events' as Route, icon: 'Trophy' },
   { label: 'Huấn luyện viên', href: '/admin/coaches' as Route, icon: 'GraduationCap' },
   { label: 'Nội dung', href: '/admin/content' as Route, icon: 'BookOpen' },
+  { label: 'FAQ', href: '/admin/faq' as Route, icon: 'HelpCircle' },
   { label: 'Đăng ký', href: '/admin/registrations' as Route, icon: 'ReceiptText' },
   { label: 'Khách hàng', href: '/admin/customers' as Route, icon: 'UsersRound' },
   { label: 'Cấu hình', href: '/admin/settings' as Route, icon: 'Settings' },

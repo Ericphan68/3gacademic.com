@@ -9,14 +9,21 @@ import { Input } from '@/components/ui/form-fields';
 import { EmptyState } from '@/components/ui/states';
 import { AUDIENCE_LABELS, AUDIENCE_ORDER } from '@/data/experiences';
 import { experienceService } from '@/services/catalogService';
-import type { AudienceTag } from '@/types';
-import { cn } from '@/lib/utils';
+import type { AudienceTag, ExperiencePackage } from '@/types';
+import { cn, matchesQuery } from '@/lib/utils';
 
-export function ExperienceExplorer() {
+export function ExperienceExplorer({ catalog }: { catalog?: ExperiencePackage[] }) {
   const [audience, setAudience] = useState<AudienceTag | 'all'>('all');
   const [query, setQuery] = useState('');
 
-  const items = useMemo(() => experienceService.filter({ audience, query }), [audience, query]);
+  const items = useMemo(() => {
+    // Không có dữ liệu server → dùng mock (giữ tương thích ngược).
+    if (!catalog) return experienceService.filter({ audience, query });
+    return catalog.filter((item) => {
+      const audienceOk = audience === 'all' || item.audiences.includes(audience);
+      return audienceOk && matchesQuery(query, item.name, item.tagline, item.description);
+    });
+  }, [audience, query, catalog]);
   const hasFilters = audience !== 'all' || query.trim().length > 0;
 
   return (

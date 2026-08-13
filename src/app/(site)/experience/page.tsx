@@ -4,6 +4,7 @@ import { ExperienceComparisonTable } from '@/features/experience/comparison-tabl
 import { ExperienceExplorer } from '@/features/experience/experience-explorer';
 import { MEDIA } from '@/constants/media';
 import { buildMetadata } from '@/lib/seo';
+import { getManagedExperiences } from '@/server/services/experienceService';
 
 export const metadata = buildMetadata({
   title: 'Gói trải nghiệm golf',
@@ -14,7 +15,9 @@ export const metadata = buildMetadata({
   keywords: ['gói trải nghiệm golf', 'golf cho người mới', 'golf gia đình', 'golf doanh nghiệp'],
 });
 
-export default function ExperiencePage() {
+export default async function ExperiencePage() {
+  const experiences = await getManagedExperiences();
+
   return (
     <>
       <PageHero
@@ -26,7 +29,7 @@ export default function ExperiencePage() {
       />
 
       <Section>
-        <ExperienceExplorer />
+        <ExperienceExplorer catalog={experiences} />
       </Section>
 
       <Section tone="surface">
@@ -35,7 +38,7 @@ export default function ExperiencePage() {
           title="Đặt các gói cạnh nhau để dễ chọn"
           description="Bảng dưới đây so sánh những gói được đặt nhiều nhất và các gói phù hợp với người mới."
         />
-        <ExperienceComparisonTable />
+        <ExperienceComparisonTable source={experiences} />
       </Section>
     </>
   );
