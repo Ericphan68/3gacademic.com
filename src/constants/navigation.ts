@@ -29,10 +29,22 @@ export interface MainNavEntry {
 
 export const MAIN_NAV: MainNavEntry[] = [
   {
-    label: 'Trải nghiệm',
-    labelEn: 'Experiences',
-    href: '/experience',
+    label: 'Học golf',
+    labelEn: 'Learn',
+    href: '/academy',
     children: [
+      {
+        label: 'Lotus Golf Academy',
+        labelEn: 'Academy',
+        href: '/academy',
+        description: '12 chương trình từ căn bản đến thi đấu',
+      },
+      {
+        label: 'Huấn luyện viên',
+        labelEn: 'Coaches',
+        href: '/coaches',
+        description: 'Tìm HLV theo chuyên môn và ngôn ngữ',
+      },
       {
         label: 'Gói trải nghiệm',
         labelEn: 'Experience packages',
@@ -51,32 +63,12 @@ export const MAIN_NAV: MainNavEntry[] = [
         href: '/bang-gia',
         description: 'Giá sân, gói bóng tập và dịch vụ',
       },
-      {
-        label: 'F&B và Lounge',
-        labelEn: 'Food & Lounge',
-        href: '/food-and-lounge',
-        description: 'Đặt món giao tận thảm tập',
-      },
     ],
   },
   {
-    label: 'Học golf',
-    labelEn: 'Learn',
-    href: '/academy',
-    children: [
-      {
-        label: 'Lotus Golf Academy',
-        labelEn: 'Academy',
-        href: '/academy',
-        description: '12 chương trình từ căn bản đến thi đấu',
-      },
-      {
-        label: 'Huấn luyện viên',
-        labelEn: 'Coaches',
-        href: '/coaches',
-        description: 'Tìm HLV theo chuyên môn và ngôn ngữ',
-      },
-    ],
+    label: 'Sân golf',
+    labelEn: 'Golf Courses',
+    href: '/san-golf',
   },
   {
     label: 'Quyền lợi',
@@ -129,6 +121,19 @@ export const MAIN_NAV: MainNavEntry[] = [
     ],
   },
   {
+    label: 'Dịch vụ khác',
+    labelEn: 'More Services',
+    href: '/food-and-lounge',
+    children: [
+      {
+        label: 'F&B và Lounge',
+        labelEn: 'Food & Lounge',
+        href: '/food-and-lounge',
+        description: 'Đặt món giao tận thảm tập',
+      },
+    ],
+  },
+  {
     label: 'Về Lotus',
     labelEn: 'About',
     href: '/about',
@@ -158,22 +163,22 @@ export const MAIN_NAV: MainNavEntry[] = [
 /** Menu mobile được chia nhóm rõ ràng. */
 export const MOBILE_NAV_GROUPS: NavGroup[] = [
   {
-    title: 'Chơi golf',
-    titleEn: 'Play',
-    items: [
-      { label: 'Trang chủ', labelEn: 'Home', href: '/' },
-      { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
-      { label: 'Bảng giá dịch vụ', labelEn: 'Pricing', href: '/bang-gia', description: 'Giá sân, gói bóng tập và dịch vụ' },
-      { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
-      { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
-    ],
-  },
-  {
     title: 'Học golf',
     titleEn: 'Learn',
     items: [
+      { label: 'Trang chủ', labelEn: 'Home', href: '/' },
       { label: 'Lotus Golf Academy', labelEn: 'Academy', href: '/academy', description: 'Lộ trình từ căn bản đến thi đấu' },
       { label: 'Huấn luyện viên', labelEn: 'Coaches', href: '/coaches', description: 'Tìm HLV theo chuyên môn' },
+      { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
+      { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
+      { label: 'Bảng giá dịch vụ', labelEn: 'Pricing', href: '/bang-gia', description: 'Giá sân, gói bóng tập và dịch vụ' },
+    ],
+  },
+  {
+    title: 'Sân golf',
+    titleEn: 'Golf Courses',
+    items: [
+      { label: 'Sân golf', labelEn: 'Golf Courses', href: '/san-golf', description: 'Thông tin từng sân golf' },
     ],
   },
   {
@@ -186,12 +191,19 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'Đối tác',
-    titleEn: 'Partners',
+    title: 'Doanh nghiệp',
+    titleEn: 'Business',
     items: [
       { label: 'Golf doanh nghiệp', labelEn: 'Corporate golf', href: '/corporate' },
       { label: 'Golf Tour', labelEn: 'Golf Tour', href: '/golf-tour' },
       { label: 'Cổng đối tác', labelEn: 'Partner portal', href: '/partner' },
+    ],
+  },
+  {
+    title: 'Dịch vụ khác',
+    titleEn: 'More Services',
+    items: [
+      { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
     ],
   },
   {
