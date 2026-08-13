@@ -183,13 +183,22 @@ export const useAccountStore = create<AccountState>()(
             : [...state.favoriteCoaches, coachId],
         })),
 
-      addLead: (lead) =>
+      addLead: (lead) => {
+        // Ghi thêm yêu cầu vào database để Admin nhận được (best-effort, không chặn khách).
+        if (typeof window !== 'undefined') {
+          void fetch('/api/leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: lead.type, summary: lead.summary, payload: lead.payload }),
+          }).catch(() => {});
+        }
         set((state) => ({
           leads: [
             { ...lead, id: generateId('ld'), createdAt: new Date().toISOString(), status: 'received' as const },
             ...state.leads,
           ],
-        })),
+        }));
+      },
 
       seedDemoData: (payload) => {
         if (get().seeded) return;
