@@ -1,96 +1,69 @@
-'use client';
-
-import { Users } from 'lucide-react';
+import { UsersRound } from 'lucide-react';
 
 import { PortalHeader } from '@/components/dashboard/portal-shell';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/states';
-import { useHydrated } from '@/hooks/useHydrated';
-import { formatCurrency, formatDateLong } from '@/lib/format';
-import { membershipService } from '@/services/catalogService';
-import { DEMO_ADMIN, DEMO_COACH, DEMO_CUSTOMER, useAuthStore } from '@/store/useAuthStore';
-import type { User, UserRole } from '@/types';
+import { listCustomers } from '@/server/services/bookingService';
 
-const ROLE_META: Record<UserRole, { label: string; variant: 'accent' | 'gold' | 'neutral' }> = {
-  customer: { label: 'Khách hàng', variant: 'neutral' },
-  coach: { label: 'Huấn luyện viên', variant: 'accent' },
-  admin: { label: 'Quản trị viên', variant: 'gold' },
+export const dynamic = 'force-dynamic';
+
+const STATUS_LABEL: Record<string, string> = {
+  NEW: 'Mới',
+  ACTIVE: 'Đang hoạt động',
+  VIP: 'VIP',
+  INACTIVE: 'Ngưng',
+  AT_RISK: 'Nguy cơ rời',
 };
 
-interface Row {
-  user: User;
-  source: 'demo' | 'registered';
-}
+const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '—');
 
-export default function AdminCustomersPage() {
-  const hydrated = useHydrated();
-  const registeredUsers = useAuthStore((state) => state.registeredUsers);
-
-  if (!hydrated) {
-    return <div className="animate-shimmer h-96 rounded-[var(--radius-lg)]" />;
-  }
-
-  const rows: Row[] = [
-    ...[DEMO_CUSTOMER, DEMO_COACH, DEMO_ADMIN].map((user) => ({ user, source: 'demo' as const })),
-    ...registeredUsers.map(({ passwordHint: _pw, ...user }) => {
-      void _pw;
-      return { user: user as User, source: 'registered' as const };
-    }),
-  ];
+export default async function AdminCustomersPage() {
+  const customers = await listCustomers();
 
   return (
     <div>
       <PortalHeader
-        title="Khách hàng & tài khoản"
-        description="Các tài khoản demo có sẵn và tài khoản khách tự đăng ký trên thiết bị này."
+        title="Khách hàng"
+        description="Danh sách khách được tạo tự động khi có đơn đặt lịch từ website."
       />
 
-      {rows.length === 0 ? (
-        <EmptyState title="Chưa có tài khoản" description="Danh sách tài khoản sẽ hiển thị tại đây." icon={Users} />
+      {customers.length === 0 ? (
+        <EmptyState
+          title="Chưa có khách hàng"
+          description="Khi khách đặt lịch trên website, hồ sơ khách sẽ tự động xuất hiện tại đây."
+          icon={UsersRound}
+        />
       ) : (
         <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--color-border)]">
-          <table className="w-full min-w-[52rem] text-sm">
+          <table className="w-full min-w-[44rem] text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)] text-left text-xs text-[var(--color-muted)]">
-                <th className="px-4 py-3 font-medium">Họ và tên</th>
-                <th className="px-4 py-3 font-medium">Liên hệ</th>
-                <th className="px-4 py-3 font-medium">Vai trò</th>
-                <th className="px-4 py-3 font-medium">Hội viên</th>
-                <th className="px-4 py-3 text-right font-medium">Số dư ví</th>
-                <th className="px-4 py-3 font-medium">Tham gia</th>
-                <th className="px-4 py-3 font-medium">Nguồn</th>
+                <th className="px-4 py-3 font-medium">Khách</th>
+                <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 text-center font-medium">Số đơn</th>
+                <th className="px-4 py-3 font-medium">Trạng thái</th>
+                <th className="px-4 py-3 font-medium">Lần cuối</th>
+                <th className="px-4 py-3 font-medium">Tạo lúc</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ user, source }) => {
-                const tier = user.membershipTier ? membershipService.getById(user.membershipTier) : undefined;
-                return (
-                  <tr key={user.id} className="border-b border-[var(--color-border)] last:border-0">
-                    <td className="px-4 py-3 font-medium">{user.fullName}</td>
-                    <td className="px-4 py-3">
-                      <p className="break-all">{user.email}</p>
-                      <p className="text-xs text-[var(--color-muted)]">{user.phone}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={ROLE_META[user.role].variant} size="sm">
-                        {ROLE_META[user.role].label}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-[var(--color-muted)]">{tier?.name ?? '—'}</td>
-                    <td className="px-4 py-3 text-right tabular-nums whitespace-nowrap">
-                      {formatCurrency(user.walletBalance)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-[var(--color-muted)]">
-                      {formatDateLong(user.joinedAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={source === 'demo' ? 'neutral' : 'success'} size="sm">
-                        {source === 'demo' ? 'Demo' : 'Tự đăng ký'}
-                      </Badge>
-                    </td>
-                  </tr>
-                );
-              })}
+              {customers.map((c) => (
+                <tr key={c.id} className="border-b border-[var(--color-border)] last:border-0">
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{c.fullName}</p>
+                    <p className="text-xs text-[var(--color-muted)]">{c.phone}</p>
+                  </td>
+                  <td className="px-4 py-3 text-[var(--color-muted)]">{c.email || '—'}</td>
+                  <td className="px-4 py-3 text-center tabular-nums">{c.bookingCount}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="neutral" size="sm">
+                      {STATUS_LABEL[c.status] ?? c.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-[var(--color-muted)]">{fmt(c.lastVisitAt)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap text-[var(--color-muted)]">{fmt(c.createdAt)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

@@ -312,6 +312,39 @@ export function BookingFlow() {
 
     addBooking(booking);
 
+    // Ghi thêm đơn vào database để Admin nhận được (best-effort, không chặn khách).
+    void fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: booking.code,
+        experienceLabel: booking.experienceLabel,
+        date: booking.date,
+        time: booking.time,
+        durationMinutes: booking.durationMinutes,
+        zoneName: booking.zoneName,
+        coachName: booking.coachName,
+        guests: booking.guests,
+        voucherCode: booking.voucherCode ?? null,
+        contact: {
+          fullName: booking.contact.fullName,
+          phone: booking.contact.phone,
+          email: booking.contact.email ?? null,
+          note: booking.contact.note ?? null,
+        },
+        paymentMethod: booking.paymentMethod,
+        paymentStatus: booking.paymentStatus,
+        status: booking.status,
+        qrPayload: booking.qrPayload,
+        addOns: booking.addOns.map((a) => ({
+          name: a.name,
+          quantity: a.quantity ?? 1,
+          unitPrice: a.unitPrice ?? 0,
+        })),
+        price: booking.price,
+      }),
+    }).catch(() => {});
+
     // Trừ ví và ghi giao dịch khi thanh toán bằng ví Lotus.
     if (paymentStatus === 'paid' && price.walletApplied > 0 && user) {
       const nextBalance = Math.max(0, walletBalance - price.walletApplied);
