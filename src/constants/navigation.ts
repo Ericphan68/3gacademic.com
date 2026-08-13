@@ -57,18 +57,20 @@ export const MAIN_NAV: MainNavEntry[] = [
         href: '/booking',
         description: 'Chọn giờ, khu vực và huấn luyện viên',
       },
-      {
-        label: 'Bảng giá dịch vụ',
-        labelEn: 'Pricing',
-        href: '/bang-gia',
-        description: 'Giá sân, gói bóng tập và dịch vụ',
-      },
     ],
   },
   {
     label: 'Sân golf',
     labelEn: 'Golf Courses',
     href: '/san-golf',
+    children: [
+      {
+        label: 'Sân Golf An Phú Lotus',
+        labelEn: 'An Phu Lotus Golf',
+        href: '/san-golf/an-phu-lotus',
+        description: 'Bảng giá dịch vụ & đặt sân',
+      },
+    ],
   },
   {
     label: 'Quyền lợi',
@@ -171,14 +173,14 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
       { label: 'Huấn luyện viên', labelEn: 'Coaches', href: '/coaches', description: 'Tìm HLV theo chuyên môn' },
       { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
       { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
-      { label: 'Bảng giá dịch vụ', labelEn: 'Pricing', href: '/bang-gia', description: 'Giá sân, gói bóng tập và dịch vụ' },
     ],
   },
   {
     title: 'Sân golf',
     titleEn: 'Golf Courses',
     items: [
-      { label: 'Sân golf', labelEn: 'Golf Courses', href: '/san-golf', description: 'Thông tin từng sân golf' },
+      { label: 'Tất cả sân golf', labelEn: 'All courses', href: '/san-golf' },
+      { label: 'Sân Golf An Phú Lotus', labelEn: 'An Phu Lotus Golf', href: '/san-golf/an-phu-lotus', description: 'Bảng giá & đặt sân' },
     ],
   },
   {

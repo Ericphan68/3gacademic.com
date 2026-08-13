@@ -102,7 +102,8 @@ export async function createBooking(input: CreateBookingInput): Promise<{ id: st
       note,
       experienceLabel: input.experienceLabel,
       zoneName: input.zoneName || null,
-      date: new Date(`${input.date}T00:00:00+07:00`),
+      // Cột @db.Date chỉ lưu ngày; parse 'YYYY-MM-DD' theo UTC để giữ đúng ngày lịch.
+      date: new Date(input.date),
       time: input.time,
       durationMinutes: input.durationMinutes,
       guests: input.guests,
