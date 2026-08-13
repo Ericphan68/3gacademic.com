@@ -223,6 +223,8 @@ export const ADMIN_NAV = [
   { label: 'Booking', href: '/admin/bookings' as Route, icon: 'CalendarCheck' },
   { label: 'Hội viên', href: '/admin/memberships' as Route, icon: 'Crown' },
   { label: 'Voucher', href: '/admin/vouchers' as Route, icon: 'Ticket' },
+  { label: 'Sự kiện', href: '/admin/events' as Route, icon: 'Trophy' },
+  { label: 'Huấn luyện viên', href: '/admin/coaches' as Route, icon: 'GraduationCap' },
   { label: 'Nội dung', href: '/admin/content' as Route, icon: 'BookOpen' },
   { label: 'Đăng ký', href: '/admin/registrations' as Route, icon: 'ReceiptText' },
   { label: 'Khách hàng', href: '/admin/customers' as Route, icon: 'UsersRound' },

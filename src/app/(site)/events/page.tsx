@@ -6,7 +6,7 @@ import { StatTile } from '@/components/common/stat-tile';
 import { MEDIA } from '@/constants/media';
 import { EventExplorer } from '@/features/events/event-explorer';
 import { buildMetadata } from '@/lib/seo';
-import { eventService } from '@/services/catalogService';
+import { getManagedEvents } from '@/server/services/eventService';
 
 export const metadata = buildMetadata({
   title: 'Sự kiện và giải đấu golf',
@@ -17,8 +17,8 @@ export const metadata = buildMetadata({
   keywords: ['giải golf', 'sự kiện golf', 'giải đấu golf phong trào', 'golf networking'],
 });
 
-export default function EventsPage() {
-  const events = eventService.getAll();
+export default async function EventsPage() {
+  const events = await getManagedEvents();
   const totalSeats = events.reduce((sum, event) => sum + event.capacity, 0);
   const freeEvents = events.filter((event) => event.fee === 0).length;
 
@@ -47,7 +47,7 @@ export default function EventsPage() {
           title="Chọn sự kiện phù hợp với bạn"
           description="Giải đấu dành cho người đã chơi được. Workshop, Demo Day và networking mở cho tất cả mọi trình độ."
         />
-        <EventExplorer />
+        <EventExplorer catalog={events} />
       </Section>
     </>
   );

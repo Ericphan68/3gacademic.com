@@ -8,8 +8,35 @@ import { Button } from '@/components/ui/button';
 import { Field, Input, Select } from '@/components/ui/form-fields';
 import { EmptyState } from '@/components/ui/states';
 import { LANGUAGE_LABELS, SPECIALTY_LABELS } from '@/data/coaches';
+import { matchesQuery } from '@/lib/utils';
 import { coachService, type CoachFilters } from '@/services/catalogService';
-import type { CoachLanguage, CoachSpecialty } from '@/types';
+import type { Coach, CoachLanguage, CoachSpecialty } from '@/types';
+
+/** Lọc + sắp xếp HLV client-side khi dữ liệu đến từ server (giống coachService.filter). */
+function filterCoaches(source: Coach[], filters: CoachFilters): Coach[] {
+  const result = source.filter((coach) => {
+    if (!matchesQuery(filters.query ?? '', coach.name, coach.title, coach.bio)) return false;
+    if (filters.specialty && filters.specialty !== 'all' && !coach.specialties.includes(filters.specialty))
+      return false;
+    if (filters.language && filters.language !== 'all' && !coach.languages.includes(filters.language))
+      return false;
+    if (filters.maxPrice && coach.pricePerSession > filters.maxPrice) return false;
+    if (filters.minRating && coach.rating < filters.minRating) return false;
+    return true;
+  });
+  switch (filters.sort) {
+    case 'price-asc':
+      return [...result].sort((a, b) => a.pricePerSession - b.pricePerSession);
+    case 'price-desc':
+      return [...result].sort((a, b) => b.pricePerSession - a.pricePerSession);
+    case 'rating':
+      return [...result].sort((a, b) => b.rating - a.rating || b.reviewCount - a.reviewCount);
+    case 'experience':
+      return [...result].sort((a, b) => b.yearsExperience - a.yearsExperience);
+    default:
+      return [...result].sort((a, b) => Number(b.featured) - Number(a.featured) || b.rating - a.rating);
+  }
+}
 
 const PRICE_OPTIONS = [
   { value: '0', label: 'Tất cả mức giá' },
@@ -33,7 +60,7 @@ const SORT_OPTIONS: { value: NonNullable<CoachFilters['sort']>; label: string }[
   { value: 'experience', label: 'Nhiều kinh nghiệm nhất' },
 ];
 
-export function CoachExplorer() {
+export function CoachExplorer({ catalog }: { catalog?: Coach[] }) {
   const [query, setQuery] = useState('');
   const [specialty, setSpecialty] = useState<CoachSpecialty | 'all'>('all');
   const [language, setLanguage] = useState<CoachLanguage | 'all'>('all');
@@ -42,18 +69,18 @@ export function CoachExplorer() {
   const [sort, setSort] = useState<NonNullable<CoachFilters['sort']>>('recommended');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const coaches = useMemo(
-    () =>
-      coachService.filter({
-        query,
-        specialty,
-        language,
-        maxPrice: Number(maxPrice) || undefined,
-        minRating: Number(minRating) || undefined,
-        sort,
-      }),
-    [query, specialty, language, maxPrice, minRating, sort],
-  );
+  const coaches = useMemo(() => {
+    const filters: CoachFilters = {
+      query,
+      specialty,
+      language,
+      maxPrice: Number(maxPrice) || undefined,
+      minRating: Number(minRating) || undefined,
+      sort,
+    };
+    // Không có dữ liệu server → dùng mock (giữ tương thích ngược).
+    return catalog ? filterCoaches(catalog, filters) : coachService.filter(filters);
+  }, [query, specialty, language, maxPrice, minRating, sort, catalog]);
 
   const hasFilters =
     query !== '' || specialty !== 'all' || language !== 'all' || maxPrice !== '0' || minRating !== '0';

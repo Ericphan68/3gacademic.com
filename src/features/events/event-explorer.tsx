@@ -8,15 +8,22 @@ import { Button } from '@/components/ui/button';
 import { Field, Input } from '@/components/ui/form-fields';
 import { EmptyState } from '@/components/ui/states';
 import { EVENT_TYPE_LABELS, EVENT_TYPE_ORDER } from '@/data/events';
-import { cn } from '@/lib/utils';
+import { cn, matchesQuery } from '@/lib/utils';
 import { eventService } from '@/services/catalogService';
-import type { EventType } from '@/types';
+import type { EventType, GolfEvent } from '@/types';
 
-export function EventExplorer() {
+export function EventExplorer({ catalog }: { catalog?: GolfEvent[] }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState<EventType | 'all'>('all');
 
-  const events = useMemo(() => eventService.filter({ type, query }), [type, query]);
+  const events = useMemo(() => {
+    // Không có dữ liệu server → dùng mock (giữ tương thích ngược).
+    if (!catalog) return eventService.filter({ type, query });
+    return catalog.filter((event) => {
+      if (type !== 'all' && event.type !== type) return false;
+      return matchesQuery(query, event.title, event.summary, event.location);
+    });
+  }, [type, query, catalog]);
 
   return (
     <div>

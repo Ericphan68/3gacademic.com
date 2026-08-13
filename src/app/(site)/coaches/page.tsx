@@ -6,7 +6,7 @@ import { StatTile } from '@/components/common/stat-tile';
 import { MEDIA } from '@/constants/media';
 import { CoachExplorer } from '@/features/coaches/coach-explorer';
 import { buildMetadata } from '@/lib/seo';
-import { coachService } from '@/services/catalogService';
+import { getManagedCoaches } from '@/server/services/coachService';
 
 export const metadata = buildMetadata({
   title: 'Huấn luyện viên golf',
@@ -16,8 +16,8 @@ export const metadata = buildMetadata({
   keywords: ['huấn luyện viên golf', 'học golf', 'thầy dạy golf', 'golf cho người mới'],
 });
 
-export default function CoachesPage() {
-  const coaches = coachService.getAll();
+export default async function CoachesPage() {
+  const coaches = await getManagedCoaches();
   const avgRating = coaches.reduce((sum, coach) => sum + coach.rating, 0) / coaches.length;
   const totalStudents = coaches.reduce((sum, coach) => sum + coach.studentCount, 0);
 
@@ -39,7 +39,7 @@ export default function CoachesPage() {
           <StatTile value="4 ngôn ngữ" label="Việt · Anh · Hàn · Nhật" tone="gold" />
         </div>
 
-        <CoachExplorer />
+        <CoachExplorer catalog={coaches} />
       </Section>
     </>
   );
