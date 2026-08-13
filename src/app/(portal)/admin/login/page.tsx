@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LogIn, ShieldCheck } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,7 +19,6 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next') || '/admin';
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +41,11 @@ function LoginForm() {
       setError(body?.error ?? 'Đăng nhập chưa thành công.');
       return;
     }
-    router.replace(nextPath.startsWith('/admin') ? nextPath : '/admin');
-    router.refresh();
+    const dest = nextPath.startsWith('/admin') ? nextPath : '/admin';
+    // Điều hướng "cứng": để trình duyệt tải lại /admin kèm cookie phiên vừa được
+    // cấp. Tránh lỗi kẹt ở trang login do router.replace + router.refresh chạy đua
+    // (đã gặp trên production: menu hiện ra nhưng giữa vẫn là form đăng nhập).
+    window.location.assign(dest);
   };
 
   return (
