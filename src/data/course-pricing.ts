@@ -62,7 +62,7 @@ export const COURSE_PRICING = {
   teeLong: {
     title: 'Sân tập Tee dài',
     holes: [
-      { label: '9 hố', duration: '2 – 2,5 giờ', price: 350000, extra: 'Extra 9 hố 150.000đ → tổng 500.000đ' },
+      { label: '9 hố', duration: '2 – 2,5 giờ', price: 400000, extra: 'Extra 9 hố 150.000đ → tổng 550.000đ' },
       { label: '18 hố', duration: '4 giờ', price: 500000, extra: 'Extra 18 hố 215.000đ → tổng 715.000đ' },
       {
         label: '36 hố',
@@ -184,7 +184,7 @@ export const BOOKABLE_PACKAGES: BookablePackage[] = [
   { id: 'ball-250', category: 'Gói bóng tập', name: 'Gói 250 bóng tập', price: 500000, unit: 'gói', desc: 'Tặng Voucher sân 9 hố (350.000đ) + 01 buổi học golf 1,5 giờ cùng HLV.' },
 
   // Sân Tee dài
-  { id: 'long-9', category: 'Sân Tee dài', name: 'Tee dài · 9 hố', price: 350000, unit: 'round', duration: '2 – 2,5 giờ', desc: 'Extra 9 hố 150.000đ.' },
+  { id: 'long-9', category: 'Sân Tee dài', name: 'Tee dài · 9 hố', price: 400000, unit: 'round', duration: '2 – 2,5 giờ', desc: 'Extra 9 hố 150.000đ.' },
   { id: 'long-18', category: 'Sân Tee dài', name: 'Tee dài · 18 hố', price: 500000, unit: 'round', duration: '4 giờ', desc: 'Extra 18 hố 215.000đ.' },
   { id: 'long-36', category: 'Sân Tee dài', name: 'Tee dài · 36 hố', price: 800000, unit: 'golfer', desc: 'Bao gồm ½ con gà, 01 lon bia, nghỉ trưa, nước suối…' },
   { id: 'long-full', category: 'Sân Tee dài', name: 'Tee dài · Full ngày', price: 1400000, unit: 'golfer', duration: '05:00 – 22:00', desc: 'Bữa trưa ¼ gà, bữa chiều hải sản, HLV hỗ trợ, nghỉ trưa máy lạnh.', featured: true },
