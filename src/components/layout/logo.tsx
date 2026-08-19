@@ -46,23 +46,11 @@ export function Logo({
           inverse ? 'text-[var(--color-champagne-300)]' : 'text-[var(--color-accent)]',
         )}
       />
-      <span className="flex flex-col leading-none">
-        <span
-          className={cn(
-            'font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-tight',
-            inverse ? 'text-white' : 'text-[var(--color-foreground)]',
-          )}
-        >
-          LOTUS GOLF
-        </span>
+      <span className="flex items-baseline gap-1.5 font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-tight whitespace-nowrap">
+        <span className={cn(inverse ? 'text-white' : 'text-[var(--color-foreground)]')}>LOTUS GOLF</span>
         {!compact ? (
-          <span
-            className={cn(
-              'mt-0.5 text-[9px] font-medium tracking-[0.24em] uppercase',
-              inverse ? 'text-white/60' : 'text-[var(--color-muted)]',
-            )}
-          >
-            Center
+          <span className={cn(inverse ? 'text-[var(--color-champagne-300)]' : 'text-[var(--color-accent)]')}>
+            CENTER
           </span>
         ) : null}
       </span>
