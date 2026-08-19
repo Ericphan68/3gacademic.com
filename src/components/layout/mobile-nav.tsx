@@ -37,7 +37,7 @@ export function MobileNav({ inverse }: { inverse: boolean }) {
           variant="ghost"
           size="icon"
           aria-label="Mở menu"
-          className={cn('lg:hidden', inverse && 'text-white hover:bg-white/10')}
+          className={cn('xl:hidden', inverse && 'text-white hover:bg-white/10')}
         >
           <Menu aria-hidden />
         </Button>

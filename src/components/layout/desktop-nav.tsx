@@ -62,7 +62,7 @@ export function DesktopNav({ inverse, locale }: { inverse: boolean; locale: Loca
     <nav
       ref={navRef}
       aria-label="Điều hướng chính"
-      className="ml-4 hidden min-w-0 flex-1 lg:block"
+      className="ml-4 hidden min-w-0 flex-1 xl:block"
     >
       <ul className="flex items-center gap-0.5">
         {MAIN_NAV.map((entry, index) => {

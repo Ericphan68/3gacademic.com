@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, LayoutDashboard, LogIn, LogOut, Moon, Search, Sun, UserRound } from 'lucide-react';
+import { LayoutDashboard, LogIn, LogOut, Moon, Search, Sun, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -48,7 +48,7 @@ export function Header() {
 
         <DesktopNav inverse={inverse} locale={locale} />
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-0 lg:gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1 xl:gap-1.5">
           <button
             type="button"
             onClick={toggleLocale}
@@ -90,7 +90,7 @@ export function Header() {
           </Button>
 
           {hydrated && user ? (
-            <div className="hidden items-center gap-1.5 lg:flex">
+            <div className="hidden items-center gap-1.5 xl:flex">
               <Button
                 asChild
                 variant={inverse ? 'inverse-outline' : 'outline'}
@@ -117,24 +117,13 @@ export function Header() {
               asChild
               variant="ghost"
               size="sm"
-              className={cn('hidden lg:inline-flex', inverse && 'text-white hover:bg-white/10')}
+              className={cn('hidden xl:inline-flex', inverse && 'text-white hover:bg-white/10')}
             >
               <Link href="/login" aria-label="Đăng nhập">
                 {hydrated ? <LogIn aria-hidden /> : <UserRound aria-hidden />}
               </Link>
             </Button>
           )}
-
-          <Button asChild variant={inverse ? 'inverse' : 'accent'} size="sm" className="hidden md:inline-flex">
-            <Link href="/booking">
-              Đặt lịch ngay
-              <ArrowRight aria-hidden />
-            </Link>
-          </Button>
-
-          <Button asChild variant={inverse ? 'inverse' : 'accent'} size="sm" className="md:hidden">
-            <Link href="/booking">Đặt lịch</Link>
-          </Button>
 
           <MobileNav inverse={inverse} />
         </div>
