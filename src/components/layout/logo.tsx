@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
@@ -40,11 +41,13 @@ export function Logo({
       aria-label="Lotus Golf Center — về trang chủ"
       className={cn('group flex shrink-0 items-center gap-2.5', className)}
     >
-      <LotusMark
-        className={cn(
-          'transition-colors',
-          inverse ? 'text-[var(--color-champagne-300)]' : 'text-[var(--color-accent)]',
-        )}
+      <Image
+        src="/images/brand-mark.png"
+        alt="Lotus Golf Center"
+        width={96}
+        height={96}
+        priority
+        className="size-9 rounded-[var(--radius-md)] object-cover md:size-10"
       />
       <span className="flex items-baseline gap-1.5 font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-tight whitespace-nowrap">
         <span className={cn(inverse ? 'text-white' : 'text-[var(--color-foreground)]')}>LOTUS GOLF</span>
