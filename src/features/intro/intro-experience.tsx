@@ -18,10 +18,10 @@ import { cn } from '@/lib/utils';
 
 const SEEN_KEY = 'lotus_intro_seen_v1';
 
-// Dán LINK EMBED YouTube vào đây để bật video (vd:
-// 'https://www.youtube-nocookie.com/embed/XXXXXXXXXXX?rel=0&modestbranding=1').
-// Để trống = dùng ảnh golf làm nền (luôn hiển thị được).
-const INTRO_VIDEO: string = '';
+// Video giới thiệu (YouTube). Đổi ID trong link nếu muốn video khác.
+// Để trống ('') = dùng ảnh golf làm nền thay cho video.
+const INTRO_VIDEO: string =
+  'https://www.youtube-nocookie.com/embed/X3ECMP8d7jM?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
 
 const LEVELS = ['Huấn luyện viên', 'Pro Tour', 'Amateur', 'Mới bắt đầu'];
 
