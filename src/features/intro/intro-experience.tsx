@@ -21,7 +21,7 @@ const SEEN_KEY = 'lotus_intro_seen_v1';
 // Video giới thiệu (YouTube). Đổi ID trong link nếu muốn video khác.
 // Để trống ('') = dùng ảnh golf làm nền thay cho video.
 const INTRO_VIDEO: string =
-  'https://www.youtube-nocookie.com/embed/X3ECMP8d7jM?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
+  'https://www.youtube-nocookie.com/embed/tew1tkYci7Y?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1';
 
 const LEVELS = ['Huấn luyện viên', 'Pro Tour', 'Amateur', 'Mới bắt đầu'];
 
@@ -98,6 +98,69 @@ export function IntroExperience() {
 
   if (phase === 'idle' || phase === 'done') return null;
 
+  // VIDEO — trải nghiệm xem video toàn màn hình (cinematic).
+  if (phase === 'video') {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex flex-col bg-black"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Video giới thiệu Lotus Golf Center"
+      >
+        <div className="flex items-center justify-between px-5 py-4 md:px-8">
+          <span className="text-xs font-medium tracking-[0.2em] text-white/85 uppercase">Lotus Golf Center</span>
+          <button
+            type="button"
+            onClick={skip}
+            aria-label="Bỏ qua"
+            className="text-white/70 transition-colors hover:text-white"
+          >
+            <X className="size-6" aria-hidden />
+          </button>
+        </div>
+
+        <div className="relative flex-1">
+          <div className="absolute inset-0 flex items-center justify-center px-3 md:px-8">
+            <div className="relative aspect-video max-h-full w-full max-w-6xl overflow-hidden rounded-[var(--radius-lg)] bg-black shadow-2xl">
+              {INTRO_VIDEO ? (
+                <iframe
+                  src={INTRO_VIDEO}
+                  title="Giới thiệu Lotus Golf Center"
+                  className="absolute inset-0 h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <span
+                  className="absolute inset-0 flex items-center justify-center bg-cover bg-center"
+                  style={{
+                    backgroundImage: `linear-gradient(rgba(8,28,42,0.25), rgba(8,28,42,0.35)), url(${MEDIA.hero.home})`,
+                  }}
+                >
+                  <PlayCircle className="size-16 text-white/90" aria-hidden />
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 px-5 py-4 md:px-8 md:py-6">
+          <button
+            type="button"
+            onClick={skip}
+            className="text-sm text-white/75 underline-offset-4 transition-colors hover:text-white hover:underline"
+          >
+            Bỏ qua
+          </button>
+          <Button variant="accent" size="lg" onClick={() => setPhase('form')}>
+            Xem tiếp
+            <ArrowRight aria-hidden />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[var(--color-navy-900,#081c2a)]/80 p-4 backdrop-blur-sm"
@@ -105,57 +168,6 @@ export function IntroExperience() {
       aria-modal="true"
       aria-label="Chào mừng đến Lotus Golf Center"
     >
-      {/* VIDEO */}
-      {phase === 'video' ? (
-        <Card>
-          <button
-            type="button"
-            onClick={skip}
-            className="absolute top-4 right-4 z-10 text-[var(--color-muted)] transition-colors hover:text-[var(--color-foreground)]"
-            aria-label="Bỏ qua"
-          >
-            <X className="size-5" aria-hidden />
-          </button>
-          <p className="eyebrow text-[var(--color-accent)]">Lotus Golf Center</p>
-          <h2 className="mt-1 text-2xl md:text-3xl">Chạm đến đỉnh cao Golf</h2>
-          <p className="mt-2 text-sm text-[var(--color-muted)]">
-            Dành ít phút cùng chúng tôi trước khi bắt đầu hành trình của bạn.
-          </p>
-          <div className="relative mt-5 aspect-video overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-navy-800)]">
-            {INTRO_VIDEO ? (
-              <iframe
-                src={INTRO_VIDEO}
-                title="Giới thiệu Lotus Golf Center"
-                className="absolute inset-0 h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <span
-                className="absolute inset-0 flex items-center justify-center bg-cover bg-center"
-                style={{
-                  backgroundImage: `linear-gradient(rgba(8,28,42,0.25), rgba(8,28,42,0.35)), url(${MEDIA.hero.home})`,
-                }}
-              >
-                <PlayCircle className="size-14 text-white/90" aria-hidden />
-              </span>
-            )}
-          </div>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={skip}
-              className="text-sm text-[var(--color-muted)] underline-offset-4 hover:underline"
-            >
-              Bỏ qua
-            </button>
-            <Button variant="accent" size="lg" onClick={() => setPhase('form')}>
-              Xem tiếp
-              <ArrowRight aria-hidden />
-            </Button>
-          </div>
-        </Card>
-      ) : null}
 
       {/* FORM */}
       {phase === 'form' ? (
