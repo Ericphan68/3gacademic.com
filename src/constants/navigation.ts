@@ -40,6 +40,12 @@ export const MAIN_NAV: MainNavEntry[] = [
         description: '12 chương trình từ căn bản đến thi đấu',
       },
       {
+        label: 'Học viện Golf AI',
+        labelEn: 'AI Golf Academy',
+        href: '/academy/ai',
+        description: 'Học Golf ứng dụng AI · lộ trình 6 cấp độ',
+      },
+      {
         label: 'Huấn luyện viên',
         labelEn: 'Coaches',
         href: '/coaches',
@@ -170,6 +176,7 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Trang chủ', labelEn: 'Home', href: '/' },
       { label: 'Lotus Golf Academy', labelEn: 'Academy', href: '/academy', description: 'Lộ trình từ căn bản đến thi đấu' },
+      { label: 'Học viện Golf AI', labelEn: 'AI Golf Academy', href: '/academy/ai', description: 'Học Golf ứng dụng AI' },
       { label: 'Huấn luyện viên', labelEn: 'Coaches', href: '/coaches', description: 'Tìm HLV theo chuyên môn' },
       { label: 'Gói trải nghiệm', labelEn: 'Experiences', href: '/experience', description: '12 gói cho mọi đối tượng' },
       { label: 'Đặt lịch ngay', labelEn: 'Book now', href: '/booking', description: 'Chọn giờ, khu vực và HLV' },
