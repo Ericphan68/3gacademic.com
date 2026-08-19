@@ -4,6 +4,7 @@ import { Header } from './header';
 import { SearchDialog } from './search-dialog';
 import { SmartAssistant } from './smart-assistant';
 
+import { IntroExperience } from '@/features/intro/intro-experience';
 import { getHomeContent } from '@/server/services/contentService';
 
 /** Khung layout dùng cho toàn bộ trang public. */
@@ -30,6 +31,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <Footer />
       <SearchDialog />
       <SmartAssistant />
+      <IntroExperience />
     </>
   );
 }

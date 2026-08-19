@@ -26,6 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
   corporate: 'Doanh nghiệp',
   'tour-group': 'Tour đoàn',
   agency: 'Đại lý',
+  intro: 'Khách vào web',
 };
 
 const FILTERS = [
