@@ -82,7 +82,9 @@
   "overrides": {
     "postcss": "^8.5.25",
     "sharp": "^0.35.3",
-    "minimatch": "^10.2.6"
+    "minimatch": "^10.2.6",
+    "nanoid": "^3.3.17",
+    "deepmerge-ts": "^8.0.0"
   },
   "allowScripts": {
     "unrs-resolver@1.12.2": true
