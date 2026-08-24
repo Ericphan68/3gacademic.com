@@ -1,9 +1,9 @@
 'use client';
 
-import { ArrowLeft, BookOpen, ExternalLink, FilePlus2, Pencil, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, ExternalLink, FilePlus2, ImagePlus, Pencil, Save, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -51,11 +51,104 @@ const EMPTY: FormState = {
 
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '—');
 
+/** Đọc file ảnh, thu nhỏ & nén (trừ GIF giữ nguyên) thành dataURL để tải lên. */
+async function fileToCompressedDataUrl(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result as string);
+    fr.onerror = () => reject(new Error('read'));
+    fr.readAsDataURL(file);
+  });
+  if (file.type === 'image/gif') return dataUrl; // giữ ảnh động
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error('decode'));
+    i.src = dataUrl;
+  });
+  let { width, height } = img;
+  const longest = Math.max(width, height);
+  if (longest > maxDim) {
+    const s = maxDim / longest;
+    width = Math.round(width * s);
+    height = Math.round(height * s);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return dataUrl;
+  ctx.drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+/** Nén + tải 1 ảnh lên server, trả về link công khai (/api/media/...). */
+async function uploadImageFile(file: File): Promise<string> {
+  if (!file.type.startsWith('image/')) throw new Error('Vui lòng chọn tệp ảnh.');
+  const dataUrl = await fileToCompressedDataUrl(file);
+  const res = await fetch('/api/admin/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dataUrl }),
+  });
+  const body = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
+  if (!res.ok || !body?.url) throw new Error(body?.error ?? 'Tải ảnh thất bại.');
+  return body.url;
+}
+
 export function PostManager({ posts }: { posts: PostRow[] }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [bodyUploading, setBodyUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const bodyInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverFile = async (file: File | undefined) => {
+    if (!file || !form) return;
+    setCoverUploading(true);
+    try {
+      const url = await uploadImageFile(file);
+      setForm((f) => (f ? { ...f, coverImage: url } : f));
+      toast.success('Đã tải ảnh bìa');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Tải ảnh thất bại');
+    } finally {
+      setCoverUploading(false);
+      if (coverInputRef.current) coverInputRef.current.value = '';
+    }
+  };
+
+  const handleBodyFile = async (file: File | undefined) => {
+    if (!file || !form) return;
+    setBodyUploading(true);
+    try {
+      const url = await uploadImageFile(file);
+      const ta = document.getElementById('p-content') as HTMLTextAreaElement | null;
+      const marker = `![](${url})`;
+      setForm((f) => {
+        if (!f) return f;
+        const cur = f.content;
+        if (ta && typeof ta.selectionStart === 'number') {
+          const s = ta.selectionStart;
+          const e = ta.selectionEnd;
+          const before = cur.slice(0, s).replace(/\n*$/, '');
+          const after = cur.slice(e).replace(/^\n*/, '');
+          const next = `${before}${before ? '\n\n' : ''}${marker}${after ? '\n\n' : ''}${after}`;
+          return { ...f, content: next };
+        }
+        return { ...f, content: cur ? `${cur.replace(/\n*$/, '')}\n\n${marker}\n` : `${marker}\n` };
+      });
+      toast.success('Đã chèn ảnh vào nội dung');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Tải ảnh thất bại');
+    } finally {
+      setBodyUploading(false);
+      if (bodyInputRef.current) bodyInputRef.current.value = '';
+    }
+  };
 
   const startEdit = (p: PostRow) =>
     setForm({
@@ -149,16 +242,56 @@ export function PostManager({ posts }: { posts: PostRow[] }) {
             <Input id="p-slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="vd: meo-choi-golf-cho-nguoi-moi" />
           </Field>
 
-          <Field label="Ảnh bìa (link)" htmlFor="p-cover" helper="Dán đường dẫn ảnh (https://…). Để trống dùng ảnh mặc định.">
-            <Input id="p-cover" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} placeholder="https://…" />
+          <Field label="Ảnh bìa" htmlFor="p-cover" helper="Tải ảnh từ máy, hoặc dán link ảnh (https://…). Để trống dùng ảnh mặc định.">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleCoverFile(e.target.files?.[0])}
+                />
+                <Button type="button" variant="outline" size="sm" loading={coverUploading} onClick={() => coverInputRef.current?.click()}>
+                  <ImagePlus aria-hidden />
+                  Tải ảnh bìa từ máy
+                </Button>
+                {form.coverImage ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setForm({ ...form, coverImage: '' })}>
+                    <X aria-hidden />
+                    Bỏ ảnh
+                  </Button>
+                ) : null}
+              </div>
+              {form.coverImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={form.coverImage} alt="Ảnh bìa" className="h-40 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] object-cover" />
+              ) : null}
+              <Input id="p-cover" value={form.coverImage} onChange={(e) => setForm({ ...form, coverImage: e.target.value })} placeholder="https://… (hoặc để trống)" />
+            </div>
           </Field>
 
           <Field label="Tóm tắt" htmlFor="p-sum" helper="1–2 câu hiển thị ở danh sách.">
             <Textarea id="p-sum" rows={2} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
           </Field>
 
-          <Field label="Nội dung *" htmlFor="p-content" helper="Xuống dòng để tách đoạn.">
-            <Textarea id="p-content" rows={14} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Nội dung bài viết…" />
+          <Field label="Nội dung *" htmlFor="p-content" helper="Xuống dòng để tách đoạn. Bấm “Chèn ảnh” để thêm ảnh vào giữa bài.">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={bodyInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleBodyFile(e.target.files?.[0])}
+                />
+                <Button type="button" variant="outline" size="sm" loading={bodyUploading} onClick={() => bodyInputRef.current?.click()}>
+                  <ImagePlus aria-hidden />
+                  Chèn ảnh vào nội dung
+                </Button>
+              </div>
+              <Textarea id="p-content" rows={14} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Nội dung bài viết…" />
+            </div>
           </Field>
 
           <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">

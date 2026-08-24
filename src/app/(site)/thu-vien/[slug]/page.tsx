@@ -13,6 +13,40 @@ export const dynamic = 'force-dynamic';
 
 const fmtDate = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '');
 
+const IMG_MD = /^!\[[^\]]*\]\((\S+?)\)$/; // ![alt](url)
+const IMG_URL = /^(?:https?:\/\/\S+\.(?:png|jpe?g|webp|gif)|\/api\/media\/\S+)$/i;
+
+/** Render nội dung bài: dòng là ảnh -> hiển thị ảnh; còn lại -> đoạn văn. */
+function ArticleBody({ content }: { content: string }) {
+  const lines = content.split('\n');
+  return (
+    <div className="space-y-5 text-[17px] leading-[1.8] text-[var(--color-foreground)]">
+      {lines.map((raw, i) => {
+        const line = raw.trim();
+        if (!line) return null;
+        const md = IMG_MD.exec(line);
+        const src = md ? md[1] : IMG_URL.test(line) ? line : null;
+        if (src) {
+          return (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={i}
+              src={src}
+              alt={md?.[0]?.replace(/^!\[|\].*$/g, '') || 'Ảnh bài viết'}
+              className="mx-auto w-full rounded-[var(--radius-lg)] border border-[var(--color-border)]"
+            />
+          );
+        }
+        return (
+          <p key={i} className="whitespace-pre-line">
+            {raw}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = await getPublishedPost(slug);
@@ -72,9 +106,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ slu
             </p>
           ) : null}
 
-          <div className="text-[17px] leading-[1.8] whitespace-pre-line text-[var(--color-foreground)]">
-            {post.content}
-          </div>
+          <ArticleBody content={post.content} />
+
+
 
           <div className="mt-10 border-t border-[var(--color-border)] pt-6">
             <Button asChild variant="outline">

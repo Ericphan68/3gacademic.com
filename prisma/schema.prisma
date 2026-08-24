@@ -801,6 +801,14 @@ model Post {
   @@index([publishedAt])
 }
 
+// Ảnh do admin tải lên (lưu trực tiếp trong DB để không mất khi redeploy).
+model ImageBlob {
+  id        String   @id @default(cuid())
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
 model Partner {
   id          String   @id @default(cuid())
   name        String
