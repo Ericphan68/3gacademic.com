@@ -104,8 +104,8 @@ export const MAIN_NAV: MainNavEntry[] = [
     ],
   },
   {
-    label: 'Doanh nghiệp',
-    labelEn: 'Business',
+    label: 'Dịch vụ khác',
+    labelEn: 'More Services',
     href: '/corporate',
     children: [
       {
@@ -121,6 +121,12 @@ export const MAIN_NAV: MainNavEntry[] = [
         description: '7 gói tour cho khách đoàn',
       },
       {
+        label: 'F&B và Lounge',
+        labelEn: 'Food & Lounge',
+        href: '/food-and-lounge',
+        description: 'Đặt món giao tận thảm tập',
+      },
+      {
         label: 'Cổng đối tác',
         labelEn: 'Partner portal',
         href: '/partner',
@@ -129,17 +135,9 @@ export const MAIN_NAV: MainNavEntry[] = [
     ],
   },
   {
-    label: 'Dịch vụ khác',
-    labelEn: 'More Services',
-    href: '/food-and-lounge',
-    children: [
-      {
-        label: 'F&B và Lounge',
-        labelEn: 'Food & Lounge',
-        href: '/food-and-lounge',
-        description: 'Đặt món giao tận thảm tập',
-      },
-    ],
+    label: 'Thư Viện',
+    labelEn: 'Library',
+    href: '/thu-vien',
   },
   {
     label: 'Về Lotus',
@@ -200,20 +198,19 @@ export const MOBILE_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: 'Doanh nghiệp',
-    titleEn: 'Business',
+    title: 'Dịch vụ khác',
+    titleEn: 'More Services',
     items: [
       { label: 'Golf doanh nghiệp', labelEn: 'Corporate golf', href: '/corporate' },
       { label: 'Golf Tour', labelEn: 'Golf Tour', href: '/golf-tour' },
+      { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
       { label: 'Cổng đối tác', labelEn: 'Partner portal', href: '/partner' },
     ],
   },
   {
-    title: 'Dịch vụ khác',
-    titleEn: 'More Services',
-    items: [
-      { label: 'F&B và Lounge', labelEn: 'Food & Lounge', href: '/food-and-lounge', description: 'Đặt món giao tận thảm tập' },
-    ],
+    title: 'Thư Viện',
+    titleEn: 'Library',
+    items: [{ label: 'Bài viết', labelEn: 'Articles', href: '/thu-vien', description: 'Kiến thức & câu chuyện golf' }],
   },
   {
     title: 'Về Lotus',
@@ -248,6 +245,7 @@ export const ADMIN_NAV = [
   { label: 'Sự kiện', href: '/admin/events' as Route, icon: 'Trophy' },
   { label: 'Huấn luyện viên', href: '/admin/coaches' as Route, icon: 'GraduationCap' },
   { label: 'Nội dung', href: '/admin/content' as Route, icon: 'BookOpen' },
+  { label: 'Thư Viện', href: '/admin/posts' as Route, icon: 'Newspaper' },
   { label: 'FAQ', href: '/admin/faq' as Route, icon: 'HelpCircle' },
   { label: 'Đăng ký', href: '/admin/registrations' as Route, icon: 'ReceiptText' },
   { label: 'Khách hàng', href: '/admin/customers' as Route, icon: 'UsersRound' },
