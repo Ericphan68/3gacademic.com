@@ -248,6 +248,7 @@ export const ADMIN_NAV = [
   { label: 'Thư Viện', href: '/admin/posts' as Route, icon: 'Newspaper' },
   { label: 'FAQ', href: '/admin/faq' as Route, icon: 'HelpCircle' },
   { label: 'Đăng ký', href: '/admin/registrations' as Route, icon: 'ReceiptText' },
+  { label: 'Nạp ví', href: '/admin/topups' as Route, icon: 'Wallet' },
   { label: 'Khách hàng', href: '/admin/customers' as Route, icon: 'UsersRound' },
   { label: 'Cấu hình', href: '/admin/settings' as Route, icon: 'Settings' },
 ] as const;

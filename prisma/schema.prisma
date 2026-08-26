@@ -125,6 +125,7 @@ model Customer {
   eventRegs      EventRegistration[]
   lessons        Lesson[]
   transactions   Transaction[]
+  topupRequests  TopupRequest[]
   foodOrders     FoodOrder[]
 
   @@index([phone])
@@ -999,6 +1000,30 @@ enum TransactionType {
   REFUND
   VOUCHER_PURCHASE
   COMMISSION
+}
+
+enum TopupStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+// Yêu cầu nạp ví: khách khai đã chuyển khoản -> Admin xác nhận -> ví mới cộng tiền.
+model TopupRequest {
+  id           String      @id @default(cuid())
+  customerId   String
+  customer     Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount       Int
+  status       TopupStatus @default(PENDING)
+  transferNote String // nội dung chuyển khoản (mã đối soát)
+  customerNote String?
+  reviewedBy   String? // email admin đã xử lý
+  reviewedAt   DateTime?
+  createdAt    DateTime    @default(now())
+
+  @@index([status])
+  @@index([customerId])
+  @@index([createdAt])
 }
 
 enum CommissionStatus {

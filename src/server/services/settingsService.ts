@@ -65,6 +65,31 @@ export async function getContactSettings(): Promise<ContactSettings> {
   }
 }
 
+export interface BankSettings {
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  branch: string;
+}
+
+/** Thông tin ngân hàng công ty để hiển thị cho khách chuyển khoản nạp ví. */
+export async function getBankSettings(): Promise<BankSettings> {
+  try {
+    const rows = await prisma.siteSetting.findMany({
+      where: { key: { in: ['bank.name', 'bank.account', 'bank.holder', 'bank.branch'] } },
+    });
+    const map = new Map(rows.map((r) => [r.key, r.value]));
+    return {
+      bankName: asString(map.get('bank.name'), ''),
+      accountNumber: asString(map.get('bank.account'), ''),
+      accountHolder: asString(map.get('bank.holder'), ''),
+      branch: asString(map.get('bank.branch'), ''),
+    };
+  } catch {
+    return { bankName: '', accountNumber: '', accountHolder: '', branch: '' };
+  }
+}
+
 /** Đọc toàn bộ cấu hình (cho trang Admin). */
 export async function getSettingsMap(): Promise<Record<string, string>> {
   const rows = await prisma.siteSetting.findMany();

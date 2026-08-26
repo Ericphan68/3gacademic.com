@@ -18,6 +18,10 @@ const schema = z.object({
   instagram: z.string().trim().max(300).optional(),
   youtube: z.string().trim().max(300).optional(),
   tiktok: z.string().trim().max(300).optional(),
+  bankName: z.string().trim().max(120).optional(),
+  accountNumber: z.string().trim().max(60).optional(),
+  accountHolder: z.string().trim().max(120).optional(),
+  branch: z.string().trim().max(160).optional(),
 });
 
 const KEY_MAP: Record<string, { key: string; group: string }> = {
@@ -32,6 +36,10 @@ const KEY_MAP: Record<string, { key: string; group: string }> = {
   instagram: { key: 'social.instagram', group: 'social' },
   youtube: { key: 'social.youtube', group: 'social' },
   tiktok: { key: 'social.tiktok', group: 'social' },
+  bankName: { key: 'bank.name', group: 'bank' },
+  accountNumber: { key: 'bank.account', group: 'bank' },
+  accountHolder: { key: 'bank.holder', group: 'bank' },
+  branch: { key: 'bank.branch', group: 'bank' },
 };
 
 export async function PUT(req: Request) {

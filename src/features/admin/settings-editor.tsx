@@ -19,6 +19,10 @@ export interface ContactForm {
   instagram: string;
   youtube: string;
   tiktok: string;
+  bankName: string;
+  accountNumber: string;
+  accountHolder: string;
+  branch: string;
 }
 
 export function SettingsEditor({ initial }: { initial: ContactForm }) {
@@ -95,6 +99,29 @@ export function SettingsEditor({ initial }: { initial: ContactForm }) {
             </Field>
             <Field label="TikTok" htmlFor="s-tt">
               <Input id="s-tt" value={form.tiktok} onChange={set('tiktok')} placeholder="https://tiktok.com/..." />
+            </Field>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-1 text-lg">Tài khoản ngân hàng (nhận nạp ví)</h2>
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Thông tin này hiển thị cho khách khi họ nạp tiền vào ví để chuyển khoản.
+        </p>
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Ngân hàng" htmlFor="s-bank">
+              <Input id="s-bank" value={form.bankName} onChange={set('bankName')} placeholder="Vietcombank" />
+            </Field>
+            <Field label="Số tài khoản" htmlFor="s-acc">
+              <Input id="s-acc" value={form.accountNumber} onChange={set('accountNumber')} placeholder="0123456789" />
+            </Field>
+            <Field label="Chủ tài khoản" htmlFor="s-holder">
+              <Input id="s-holder" value={form.accountHolder} onChange={set('accountHolder')} placeholder="CONG TY TNHH LOTUS GOLF" />
+            </Field>
+            <Field label="Chi nhánh (tuỳ chọn)" htmlFor="s-branch">
+              <Input id="s-branch" value={form.branch} onChange={set('branch')} placeholder="Chi nhánh TP.HCM" />
             </Field>
           </div>
         </div>
