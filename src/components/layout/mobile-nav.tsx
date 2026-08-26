@@ -112,12 +112,17 @@ export function MobileNav({ inverse }: { inverse: boolean }) {
               </Button>
             </>
           ) : (
-            <Button asChild variant="outline" block>
-              <Link href="/login">
-                <LogIn aria-hidden />
-                Đăng nhập
-              </Link>
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button asChild variant="outline" block>
+                <Link href="/login">
+                  <LogIn aria-hidden />
+                  Đăng nhập
+                </Link>
+              </Button>
+              <Button asChild variant="accent" block>
+                <Link href="/register">Đăng ký</Link>
+              </Button>
+            </div>
           )}
 
           <a

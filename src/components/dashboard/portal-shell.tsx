@@ -14,6 +14,7 @@ import { InitialsAvatar } from '@/components/ui/misc';
 import { useHydrated } from '@/hooks/useHydrated';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/useAuthStore';
+import type { User } from '@/types/account';
 
 export interface PortalNavItem {
   readonly label: string;
@@ -29,18 +30,28 @@ export function PortalShell({
   nav,
   title,
   requiredRole,
+  initialUser,
   children,
 }: {
   nav: readonly PortalNavItem[];
   title: string;
   requiredRole?: 'customer' | 'coach' | 'admin';
+  /** User đọc từ server (cookie) để tránh nhấp nháy khi store client chưa nạp. */
+  initialUser?: User | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const hydrated = useHydrated();
-  const user = useAuthStore((state) => state.user);
+  const storeUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
+  const user = storeUser ?? initialUser ?? null;
+
+  /* Đồng bộ user từ server vào store để header và các nơi khác cùng thấy. */
+  useEffect(() => {
+    if (initialUser) setUser(initialUser);
+  }, [initialUser, setUser]);
 
   /* Chưa đăng nhập thì đưa về trang đăng nhập. */
   useEffect(() => {
@@ -50,15 +61,11 @@ export function PortalShell({
       return;
     }
     if (requiredRole === 'coach' && user.role !== 'coach') {
-      toast.error('Khu vực dành cho huấn luyện viên', {
-        description: 'Đăng nhập bằng tài khoản demo coach@lotusgolf.vn để xem Coach Portal.',
-      });
+      toast.error('Khu vực dành cho huấn luyện viên');
       router.replace('/dashboard');
     }
     if (requiredRole === 'admin' && user.role !== 'admin') {
-      toast.error('Khu vực quản trị', {
-        description: 'Đăng nhập bằng tài khoản demo admin@lotusgolf.vn để xem khu quản trị.',
-      });
+      toast.error('Khu vực quản trị');
       router.replace('/dashboard');
     }
   }, [hydrated, user, requiredRole, router]);
@@ -76,7 +83,7 @@ export function PortalShell({
       <div className="container-lotus flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
         <h1 className="text-2xl">Bạn cần đăng nhập</h1>
         <p className="mt-2 max-w-md text-[var(--color-muted)]">
-          Đăng nhập bằng tài khoản demo để xem khu vực này. Đang chuyển bạn tới trang đăng nhập…
+          Vui lòng đăng nhập để xem khu vực này. Đang chuyển bạn tới trang đăng nhập…
         </p>
         <Button asChild variant="accent" className="mt-6">
           <Link href="/login">Tới trang đăng nhập</Link>

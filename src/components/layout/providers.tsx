@@ -21,6 +21,26 @@ function ThemeSync() {
   return null;
 }
 
+/** Nạp phiên đăng nhập thật (từ cookie server) vào store client khi tải trang. */
+function SessionSync() {
+  const setUser = useAuthStore((state) => state.setUser);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/auth/me', { cache: 'no-store' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (alive) setUser(data?.user ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [setUser]);
+
+  return null;
+}
+
 /** Đồng bộ ngôn ngữ đang chọn vào thuộc tính lang của <html>. */
 function LocaleSync() {
   const locale = useUiStore((state) => state.locale);
@@ -56,6 +76,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <TooltipProvider delayDuration={200}>
       <ThemeSync />
       <LocaleSync />
+      <SessionSync />
       <DemoDataSeeder />
       {children}
       <Toaster

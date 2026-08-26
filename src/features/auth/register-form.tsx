@@ -41,7 +41,7 @@ const PASSWORD_RULES = [
 
 export function RegisterForm() {
   const router = useRouter();
-  const registerUser = useAuthStore((state) => state.register);
+  const setUser = useAuthStore((state) => state.setUser);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
@@ -58,20 +58,25 @@ export function RegisterForm() {
   const password = useWatch({ control, name: 'password' }) ?? '';
 
   const onSubmit = async (values: FormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    const result = registerUser({
-      fullName: values.fullName,
-      email: values.email,
-      phone: values.phone,
-      password: values.password,
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        password: values.password,
+      }),
     });
+    const body = (await res.json().catch(() => null)) as { user?: unknown; error?: string } | null;
 
-    if (!result.success) {
-      toast.error('Chưa tạo được tài khoản', { description: result.message });
+    if (!res.ok || !body?.user) {
+      toast.error('Chưa tạo được tài khoản', { description: body?.error });
       return;
     }
 
-    toast.success('Tạo tài khoản thành công', { description: result.message });
+    setUser(body.user as Parameters<typeof setUser>[0]);
+    toast.success('Tạo tài khoản thành công', { description: 'Chào mừng bạn đến với Lotus Golf Center.' });
     router.push('/dashboard');
   };
 
@@ -201,12 +206,7 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="mt-6 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] p-4 text-xs leading-relaxed text-[var(--color-muted)]">
-        Đây là hệ thống đăng ký minh hoạ. Tài khoản chỉ được lưu trong trình duyệt của bạn và không gửi tới bất
-        kỳ máy chủ nào. Vui lòng không dùng mật khẩu thật.
-      </p>
-
-      <p className="mt-6 text-center text-sm text-[var(--color-muted)]">
+      <p className="mt-8 text-center text-sm text-[var(--color-muted)]">
         Đã có tài khoản?{' '}
         <Link href="/login" className="font-medium text-[var(--color-accent)] hover:underline">
           Đăng nhập

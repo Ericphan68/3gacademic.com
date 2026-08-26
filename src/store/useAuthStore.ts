@@ -100,6 +100,8 @@ interface AuthState {
   login: (email: string, password: string) => AuthResult;
   loginWithProvider: (provider: 'google' | 'phone') => AuthResult;
   register: (input: RegisterInput) => AuthResult;
+  /** Đặt phiên đăng nhập thật (dữ liệu từ server). */
+  setUser: (user: User | null) => void;
   logout: () => void;
   updateProfile: (patch: Partial<Pick<User, 'fullName' | 'email' | 'phone'>>) => void;
   updatePreferences: (patch: Partial<UserPreferences>) => void;
@@ -186,7 +188,12 @@ export const useAuthStore = create<AuthState>()(
         return { success: true, message: 'Tạo tài khoản thành công. Chào mừng bạn đến với Lotus.' };
       },
 
-      logout: () => set({ user: null, isAuthenticated: false }),
+      setUser: (user) => set({ user, isAuthenticated: Boolean(user) }),
+
+      logout: () => {
+        void fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        set({ user: null, isAuthenticated: false });
+      },
 
       updateProfile: (patch) =>
         set((state) =>

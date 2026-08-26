@@ -204,6 +204,8 @@ export interface AdminCustomerRow {
   bookingCount: number;
   createdAt: string;
   lastVisitAt: string | null;
+  /** Khách đã có tài khoản đăng nhập (đã đặt mật khẩu) hay chưa. */
+  hasAccount: boolean;
 }
 
 export async function listCustomers(limit = 300): Promise<AdminCustomerRow[]> {
@@ -227,6 +229,7 @@ async function listCustomersInner(limit: number): Promise<AdminCustomerRow[]> {
       status: true,
       createdAt: true,
       lastVisitAt: true,
+      passwordHash: true,
       _count: { select: { bookings: true } },
     },
   });
@@ -239,6 +242,7 @@ async function listCustomersInner(limit: number): Promise<AdminCustomerRow[]> {
     bookingCount: r._count.bookings,
     createdAt: r.createdAt.toISOString(),
     lastVisitAt: r.lastVisitAt ? r.lastVisitAt.toISOString() : null,
+    hasAccount: Boolean(r.passwordHash),
   }));
 }
 

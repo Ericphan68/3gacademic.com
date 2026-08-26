@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, LogIn, LogOut, Moon, Search, Sun, UserRound } from 'lucide-react';
+import { LayoutDashboard, LogOut, Moon, Search, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -90,7 +90,7 @@ export function Header() {
           </Button>
 
           {hydrated && user ? (
-            <div className="hidden items-center gap-1.5 xl:flex">
+            <div className="hidden items-center gap-1.5 md:flex">
               <Button
                 asChild
                 variant={inverse ? 'inverse-outline' : 'outline'}
@@ -113,16 +113,14 @@ export function Header() {
               </Button>
             </div>
           ) : (
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className={cn('hidden xl:inline-flex', inverse && 'text-white hover:bg-white/10')}
-            >
-              <Link href="/login" aria-label="Đăng nhập">
-                {hydrated ? <LogIn aria-hidden /> : <UserRound aria-hidden />}
-              </Link>
-            </Button>
+            <div className="hidden items-center gap-2 md:flex">
+              <Button asChild variant={inverse ? 'inverse-outline' : 'outline'} size="sm">
+                <Link href="/login">Đăng nhập</Link>
+              </Button>
+              <Button asChild variant="accent" size="sm">
+                <Link href="/register">Đăng ký</Link>
+              </Button>
+            </div>
           )}
 
           <MobileNav inverse={inverse} />
