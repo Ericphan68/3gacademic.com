@@ -17,6 +17,7 @@ import { PAYMENT_METHODS } from '@/data/booking-options';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency, formatDateLong, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { spendWalletServer } from '@/lib/wallet-client';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { EventRegistration, GolfEvent, PaymentMethod } from '@/types';
@@ -65,7 +66,38 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
   });
 
   const onSubmit = async (values: FormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    if (alreadyRegistered) {
+      toast.info('Bạn đã đăng ký sự kiện này rồi.');
+      return;
+    }
+
+    // Thanh toán bằng ví → trừ ví THẬT ở server trước khi ghi nhận đăng ký.
+    if (paymentMethod === 'wallet' && total > 0) {
+      if (!user) {
+        toast.error('Bạn cần đăng nhập', { description: 'Đăng nhập để thanh toán bằng ví.' });
+        return;
+      }
+      if (user.walletBalance < total) {
+        toast.error('Số dư ví không đủ', {
+          description: `Bạn cần thêm ${formatCurrency(total - user.walletBalance)}. Hãy nạp ví trước.`,
+        });
+        return;
+      }
+      let nextBalance: number;
+      try {
+        nextBalance = await spendWalletServer(total, `Phí sự kiện · ${event.title}`);
+      } catch (e) {
+        toast.error('Thanh toán ví chưa thành công', { description: e instanceof Error ? e.message : undefined });
+        return;
+      }
+      setWalletBalance(nextBalance);
+      addTransaction({
+        type: 'payment',
+        label: `Phí sự kiện · ${event.title}`,
+        amount: -total,
+        balanceAfter: nextBalance,
+      });
+    }
 
     const entry = registerEvent({
       eventId: event.id,
@@ -76,17 +108,6 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
       attendees,
       fee: total,
     });
-
-    if (paymentMethod === 'wallet' && user && total > 0) {
-      const nextBalance = Math.max(0, user.walletBalance - total);
-      setWalletBalance(nextBalance);
-      addTransaction({
-        type: 'payment',
-        label: `Phí sự kiện · ${event.title}`,
-        amount: -Math.min(total, user.walletBalance),
-        balanceAfter: nextBalance,
-      });
-    }
 
     setResult(entry);
     toast.success('Đăng ký sự kiện thành công', {

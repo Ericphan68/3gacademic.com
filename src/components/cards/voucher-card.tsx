@@ -12,6 +12,7 @@ import { VOUCHER_CATEGORY_LABELS } from '@/data/vouchers';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { spendWalletServer } from '@/lib/wallet-client';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Voucher } from '@/types';
@@ -34,10 +35,10 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
       ? `Giảm ${voucher.discountValue}%`
       : `Giảm ${formatCurrency(voucher.discountValue, { compact: true })}`;
 
-  const acquire = (mode: 'buy' | 'save' | 'gift') => {
+  const acquire = async (mode: 'buy' | 'save' | 'gift') => {
     if (!user) {
       toast.error('Bạn cần đăng nhập', {
-        description: 'Đăng nhập bằng tài khoản demo để lưu voucher vào tài khoản.',
+        description: 'Đăng nhập để lưu voucher vào tài khoản.',
       });
       return;
     }
@@ -59,15 +60,20 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
         });
         return;
       }
-      const nextBalance = user.walletBalance - voucher.price;
-      setWalletBalance(nextBalance);
-      addTransaction({
-        type: 'voucher-purchase',
-        label: `Mua voucher ${voucher.name}`,
-        amount: -voucher.price,
-        balanceAfter: nextBalance,
-        reference: voucher.code,
-      });
+      try {
+        const nextBalance = await spendWalletServer(voucher.price, `Mua voucher ${voucher.name}`, voucher.code);
+        setWalletBalance(nextBalance);
+        addTransaction({
+          type: 'voucher-purchase',
+          label: `Mua voucher ${voucher.name}`,
+          amount: -voucher.price,
+          balanceAfter: nextBalance,
+          reference: voucher.code,
+        });
+      } catch (e) {
+        toast.error('Mua voucher chưa thành công', { description: e instanceof Error ? e.message : undefined });
+        return;
+      }
     }
 
     addVoucher({
@@ -175,7 +181,7 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
               size="sm"
               className="flex-1"
               disabled={soldOut || alreadyOwned}
-              onClick={() => acquire(voucher.price === 0 ? 'save' : 'buy')}
+              onClick={() => void acquire(voucher.price === 0 ? 'save' : 'buy')}
             >
               {voucher.price === 0 ? <BookmarkPlus aria-hidden /> : <ShoppingCart aria-hidden />}
               {alreadyOwned ? 'Đã có' : voucher.price === 0 ? 'Lưu voucher' : 'Mua ngay'}
@@ -185,7 +191,7 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
               size="icon-sm"
               aria-label={`Tặng voucher ${voucher.name}`}
               disabled={soldOut || alreadyOwned}
-              onClick={() => acquire('gift')}
+              onClick={() => void acquire('gift')}
             >
               <Gift aria-hidden />
             </Button>

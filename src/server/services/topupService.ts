@@ -181,6 +181,31 @@ export async function confirmTopup(id: string, adminEmail: string): Promise<numb
   });
 }
 
+/**
+ * Trừ tiền THẬT khỏi ví (dùng cho đặt sân, voucher, sự kiện, F&B...).
+ * Kiểm tra số dư trong DB, trừ nguyên tử + ghi giao dịch. Trả số dư mới.
+ */
+export async function spendWallet(
+  customerId: string,
+  amount: number,
+  label: string,
+  reference?: string,
+): Promise<number> {
+  if (!Number.isFinite(amount) || amount <= 0) throw new TopupError('Số tiền không hợp lệ.');
+  const value = Math.round(amount);
+  return prisma.$transaction(async (tx) => {
+    const c = await tx.customer.findUnique({ where: { id: customerId }, select: { walletBalance: true } });
+    if (!c) throw new TopupError('Không tìm thấy khách hàng.', 404);
+    if (c.walletBalance < value) throw new TopupError('Số dư ví không đủ.', 400);
+    const after = c.walletBalance - value;
+    await tx.customer.update({ where: { id: customerId }, data: { walletBalance: after } });
+    await tx.transaction.create({
+      data: { customerId, type: 'PAYMENT', label, amount: -value, balanceAfter: after, reference: reference ?? null },
+    });
+    return after;
+  });
+}
+
 /** Admin từ chối yêu cầu nạp (không cộng ví). */
 export async function rejectTopup(id: string, adminEmail: string): Promise<void> {
   const req = await prisma.topupRequest.findUnique({ where: { id }, select: { status: true } });

@@ -25,6 +25,7 @@ import {
 } from '@/services/catalogService';
 import { calculateBookingPrice, resolveAddOns } from '@/services/pricingService';
 import { useAccountStore } from '@/store/useAccountStore';
+import { spendWalletServer } from '@/lib/wallet-client';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   BOOKING_STEPS,
@@ -238,8 +239,32 @@ export function BookingFlow() {
       return;
     }
 
+    // Thanh toán bằng ví Lotus → trừ ví THẬT ở server (không dùng cổng giả).
+    if (method === 'wallet') {
+      if (!user) {
+        toast.error('Bạn cần đăng nhập', { description: 'Đăng nhập để thanh toán bằng ví Lotus.' });
+        return;
+      }
+      void (async () => {
+        setSubmitting(true);
+        try {
+          const newBalance = await spendWalletServer(
+            price.walletApplied,
+            'Thanh toán đặt lịch Lotus',
+          );
+          await finalizeBooking('paid', newBalance);
+        } catch (e) {
+          setSubmitting(false);
+          toast.error('Thanh toán ví chưa thành công', {
+            description: e instanceof Error ? e.message : undefined,
+          });
+        }
+      })();
+      return;
+    }
+
     if (INSTANT_METHODS.includes(method)) {
-      const amount = method === 'wallet' ? price.walletApplied : price.total;
+      const amount = price.total;
       gatewayNonce.current += 1;
       setGateway({
         method,
@@ -275,7 +300,7 @@ export function BookingFlow() {
     });
   };
 
-  const finalizeBooking = async (paymentStatus: PaymentStatus) => {
+  const finalizeBooking = async (paymentStatus: PaymentStatus, serverBalance?: number) => {
     setSubmitting(true);
     await new Promise((resolve) => setTimeout(resolve, 400));
 
@@ -345,15 +370,15 @@ export function BookingFlow() {
       }),
     }).catch(() => {});
 
-    // Trừ ví và ghi giao dịch khi thanh toán bằng ví Lotus.
-    if (paymentStatus === 'paid' && price.walletApplied > 0 && user) {
-      const nextBalance = Math.max(0, walletBalance - price.walletApplied);
-      setWalletBalance(nextBalance);
+    // Ví đã được trừ THẬT ở server (spendWalletServer). Cập nhật số dư hiển thị + ghi
+    // giao dịch để dashboard client phản ánh ngay.
+    if (paymentStatus === 'paid' && price.walletApplied > 0 && user && typeof serverBalance === 'number') {
+      setWalletBalance(serverBalance);
       addTransaction({
         type: 'payment',
         label: `Thanh toán đặt lịch · ${code}`,
         amount: -price.walletApplied,
-        balanceAfter: nextBalance,
+        balanceAfter: serverBalance,
         reference: code,
       });
     }

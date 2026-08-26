@@ -16,6 +16,7 @@ import { FNB_CATEGORY_LABELS, FNB_CATEGORY_ORDER } from '@/data/fnb';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { spendWalletServer } from '@/lib/wallet-client';
 import { fnbService } from '@/services/catalogService';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -220,8 +221,20 @@ export function FnbCart() {
   const total = cartTotal(lines);
   const count = cartCount(lines);
 
-  const checkout = () => {
+  const checkout = async () => {
     if (lines.length === 0) return;
+
+    // Nếu đủ số dư → trừ ví THẬT ở server trước khi tạo đơn; nếu không → trả tại quầy.
+    const payByWallet = Boolean(user && total > 0 && user.walletBalance >= total);
+    let nextBalance: number | null = null;
+    if (payByWallet) {
+      try {
+        nextBalance = await spendWalletServer(total, 'Đơn F&B Lotus');
+      } catch (e) {
+        toast.error('Thanh toán ví chưa thành công', { description: e instanceof Error ? e.message : undefined });
+        return;
+      }
+    }
 
     const order = addFnbOrder({
       items: lines.map((line) => ({
@@ -237,8 +250,7 @@ export function FnbCart() {
       note,
     });
 
-    if (user && user.walletBalance >= total) {
-      const nextBalance = user.walletBalance - total;
+    if (nextBalance !== null) {
       setWalletBalance(nextBalance);
       addTransaction({
         type: 'payment',
@@ -460,7 +472,7 @@ export function FnbCart() {
                 </p>
               )}
 
-              <Button variant="accent" size="lg" block onClick={checkout}>
+              <Button variant="accent" size="lg" block onClick={() => void checkout()}>
                 Đặt món ({count})
               </Button>
             </div>
