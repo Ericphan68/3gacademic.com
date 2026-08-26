@@ -36,6 +36,8 @@ interface AccountState {
   favoriteCoaches: string[];
   leads: LeadRequest[];
   seeded: boolean;
+  /** Chủ sở hữu dữ liệu client hiện tại (id khách đăng nhập). Đổi chủ -> xoá sạch. */
+  ownerId: string | null;
 
   addBooking: (booking: Booking) => void;
   cancelBooking: (id: string) => void;
@@ -50,6 +52,8 @@ interface AccountState {
   addFnbOrder: (order: Omit<FnbOrder, 'id' | 'code' | 'createdAt' | 'status'>) => FnbOrder;
   toggleFavoriteCoach: (coachId: string) => void;
   addLead: (lead: Omit<LeadRequest, 'id' | 'createdAt' | 'status'>) => void;
+  /** Gắn dữ liệu cho khách đang đăng nhập; nếu khác chủ cũ -> xoá sạch (chống lẫn khách). */
+  claimFor: (userId: string | null) => void;
   seedDemoData: (payload: {
     bookings: Booking[];
     transactions: WalletTransaction[];
@@ -72,6 +76,7 @@ const EMPTY = {
   favoriteCoaches: [],
   leads: [],
   seeded: false,
+  ownerId: null,
 } satisfies Omit<
   AccountState,
   | 'addBooking'
@@ -87,6 +92,7 @@ const EMPTY = {
   | 'addFnbOrder'
   | 'toggleFavoriteCoach'
   | 'addLead'
+  | 'claimFor'
   | 'seedDemoData'
   | 'resetAccount'
 >;
@@ -203,6 +209,10 @@ export const useAccountStore = create<AccountState>()(
       seedDemoData: (payload) => {
         if (get().seeded) return;
         set({ ...payload, seeded: true });
+      },
+
+      claimFor: (userId) => {
+        if (get().ownerId !== userId) set({ ...EMPTY, ownerId: userId });
       },
 
       resetAccount: () => set({ ...EMPTY }),

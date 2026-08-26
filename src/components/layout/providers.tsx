@@ -41,6 +41,21 @@ function SessionSync() {
   return null;
 }
 
+/**
+ * Gắn dữ liệu client (booking/voucher/ví demo…) cho đúng khách đang đăng nhập.
+ * Khi đổi khách hoặc đăng xuất -> xoá sạch để không lẫn dữ liệu người khác.
+ */
+function AccountOwnerSync() {
+  const userId = useAuthStore((state) => state.user?.id ?? null);
+  const claimFor = useAccountStore((state) => state.claimFor);
+
+  useEffect(() => {
+    claimFor(userId);
+  }, [userId, claimFor]);
+
+  return null;
+}
+
 /** Đồng bộ ngôn ngữ đang chọn vào thuộc tính lang của <html>. */
 function LocaleSync() {
   const locale = useUiStore((state) => state.locale);
@@ -77,6 +92,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ThemeSync />
       <LocaleSync />
       <SessionSync />
+      <AccountOwnerSync />
       <DemoDataSeeder />
       {children}
       <Toaster
