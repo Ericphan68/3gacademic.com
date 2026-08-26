@@ -40,7 +40,7 @@ type CustomerRecord = {
 };
 
 /** Chuyển bản ghi Customer -> đối tượng User cho giao diện (không kèm mật khẩu). */
-function toUser(c: CustomerRecord): User {
+function toUser(c: CustomerRecord, membership?: { tier: string; expiresAt: Date } | null): User {
   return {
     id: c.id,
     role: 'customer',
@@ -49,8 +49,8 @@ function toUser(c: CustomerRecord): User {
     phone: c.phone,
     avatarInitials: c.avatarInitials || initials(c.fullName),
     joinedAt: c.joinedAt.toISOString().slice(0, 10),
-    membershipTier: null,
-    membershipExpiresAt: null,
+    membershipTier: (membership?.tier as User['membershipTier']) ?? null,
+    membershipExpiresAt: membership?.expiresAt.toISOString() ?? null,
     walletBalance: c.walletBalance,
     loyaltyPoints: c.loyaltyPoints,
     preferences: DEFAULT_PREFERENCES,
@@ -138,7 +138,13 @@ export async function loginCustomer(identifier: string, password: string): Promi
 export async function getCustomerAccount(id: string): Promise<User | null> {
   const c = await prisma.customer.findUnique({ where: { id }, select: { ...SELECT, deletedAt: true } });
   if (!c || c.deletedAt) return null;
-  return toUser(c);
+
+  const membership = await prisma.customerMembership.findFirst({
+    where: { customerId: id, isActive: true, expiresAt: { gt: new Date() } },
+    orderBy: { purchasedAt: 'desc' },
+    select: { expiresAt: true, plan: { select: { key: true } } },
+  });
+  return toUser(c, membership ? { tier: membership.plan.key, expiresAt: membership.expiresAt } : null);
 }
 
 /** Admin đặt lại mật khẩu cho khách (khi khách cần hỗ trợ). */

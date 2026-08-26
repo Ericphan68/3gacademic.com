@@ -9,7 +9,12 @@ import { FounderCountdown } from '@/features/membership/founder-countdown';
 import { MembershipCalculator } from '@/features/membership/membership-calculator';
 import { MembershipPricing } from '@/features/membership/membership-purchase';
 import { buildMetadata } from '@/lib/seo';
+import { getCustomerSession } from '@/server/auth/current-customer';
+import { getCustomerAccount } from '@/server/services/customerAuthService';
 import { getManagedTiers } from '@/server/services/membershipService';
+import { getBankSettings } from '@/server/services/settingsService';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = buildMetadata({
   title: 'Hội viên & Top-up',
@@ -21,7 +26,12 @@ export const metadata = buildMetadata({
 });
 
 export default async function MembershipPage() {
-  const tiers = await getManagedTiers();
+  const [tiers, bank, session] = await Promise.all([
+    getManagedTiers(),
+    getBankSettings(),
+    getCustomerSession(),
+  ]);
+  const account = session ? await getCustomerAccount(session.sub) : null;
   const founder = tiers.find((tier) => tier.id === 'founder');
 
   return (
@@ -40,7 +50,14 @@ export default async function MembershipPage() {
           title="Chọn hạng phù hợp với tần suất của bạn"
           description="Số dư Top-up dùng được cho giờ tập, buổi học với huấn luyện viên, F&B, phí sự kiện và mua voucher."
         />
-        <MembershipPricing tiers={tiers} />
+        <MembershipPricing
+          tiers={tiers}
+          isLoggedIn={Boolean(account)}
+          walletBalance={account?.walletBalance ?? 0}
+          currentTier={account?.membershipTier ?? null}
+          bank={bank}
+          phone={account?.phone ?? ''}
+        />
       </Section>
 
       {founder ? (
