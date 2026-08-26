@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { Logo } from './logo';
 import { NewsletterForm } from './newsletter-form';
+import { SocialLinks } from './social-links';
 
 import { FOOTER_NAV } from '@/constants/navigation';
 import { SITE } from '@/constants/site';
@@ -62,6 +63,13 @@ export async function Footer() {
                 </a>
               </li>
             </ul>
+
+            <div className="mt-7">
+              <p className="mb-3 text-[11px] font-semibold tracking-widest text-[var(--color-champagne-300)] uppercase">
+                Kết nối với chúng tôi
+              </p>
+              <SocialLinks facebook={contact.facebook} zalo={contact.zalo} whatsapp={contact.whatsapp} />
+            </div>
           </div>
 
           {/* Các cột điều hướng */}

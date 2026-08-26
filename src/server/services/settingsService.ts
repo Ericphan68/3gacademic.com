@@ -16,6 +16,7 @@ export interface ContactSettings {
   address: string;
   openHours: string;
   zalo: string;
+  whatsapp: string;
   facebook: string;
   instagram: string;
   youtube: string;
@@ -30,7 +31,7 @@ export async function getContactSettings(): Promise<ContactSettings> {
     const rows = await prisma.siteSetting.findMany({
       where: { key: { in: [
         'site.name', 'site.hotline', 'site.email', 'site.address', 'site.openHours',
-        'social.zalo', 'social.facebook', 'social.instagram', 'social.youtube', 'social.tiktok',
+        'social.zalo', 'social.whatsapp', 'social.facebook', 'social.instagram', 'social.youtube', 'social.tiktok',
       ] } },
     });
     const map = new Map(rows.map((r) => [r.key, r.value]));
@@ -41,6 +42,7 @@ export async function getContactSettings(): Promise<ContactSettings> {
       address: asString(map.get('site.address'), CONTACT.addressLine),
       openHours: asString(map.get('site.openHours'), CONTACT.openHours),
       zalo: asString(map.get('social.zalo'), CONTACT.zalo),
+      whatsapp: asString(map.get('social.whatsapp'), ''),
       facebook: asString(map.get('social.facebook'), ''),
       instagram: asString(map.get('social.instagram'), ''),
       youtube: asString(map.get('social.youtube'), ''),
@@ -54,6 +56,7 @@ export async function getContactSettings(): Promise<ContactSettings> {
       address: CONTACT.addressLine,
       openHours: CONTACT.openHours,
       zalo: CONTACT.zalo,
+      whatsapp: '',
       facebook: '',
       instagram: '',
       youtube: '',

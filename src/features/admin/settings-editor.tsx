@@ -14,6 +14,7 @@ export interface ContactForm {
   address: string;
   openHours: string;
   zalo: string;
+  whatsapp: string;
   facebook: string;
   instagram: string;
   youtube: string;
@@ -74,9 +75,14 @@ export function SettingsEditor({ initial }: { initial: ContactForm }) {
       <section>
         <h2 className="mb-4 text-lg">Mạng xã hội</h2>
         <div className="space-y-4">
-          <Field label="Zalo" htmlFor="s-zalo">
-            <Input id="s-zalo" value={form.zalo} onChange={set('zalo')} placeholder="https://zalo.me/..." />
-          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Zalo" htmlFor="s-zalo">
+              <Input id="s-zalo" value={form.zalo} onChange={set('zalo')} placeholder="https://zalo.me/..." />
+            </Field>
+            <Field label="WhatsApp" htmlFor="s-wa" helper="Dán link wa.me kèm số (mã VN 84).">
+              <Input id="s-wa" value={form.whatsapp} onChange={set('whatsapp')} placeholder="https://wa.me/8490..." />
+            </Field>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Facebook" htmlFor="s-fb">
               <Input id="s-fb" value={form.facebook} onChange={set('facebook')} placeholder="https://facebook.com/..." />
