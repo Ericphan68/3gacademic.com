@@ -142,7 +142,7 @@ export default async function MembershipPage() {
 
       {/* Calculator */}
       <Section tone="surface">
-        <MembershipCalculator />
+        <MembershipCalculator tiers={tiers} />
       </Section>
 
       {/* FAQ */}

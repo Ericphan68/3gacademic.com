@@ -6,31 +6,34 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Field, Select } from '@/components/ui/form-fields';
 import { formatCurrency } from '@/lib/format';
-import { estimateMembershipSaving } from '@/services/pricingService';
-import { MEMBERSHIP_TIERS } from '@/data/memberships';
-import type { MembershipTierId } from '@/types';
+import type { MembershipTier, MembershipTierId } from '@/types';
 
-/** Công cụ ước tính tiết kiệm khi trở thành hội viên. */
-export function MembershipCalculator() {
+const AVG_SESSION_PRICE = 320_000; // giá tham khảo 1 buổi tập
+const AVG_LESSON_PRICE = 450_000; // giá tham khảo 1 buổi học với HLV
+
+/** Công cụ ước tính tiết kiệm khi trở thành hội viên — dùng số liệu từ gói thật (DB). */
+export function MembershipCalculator({ tiers }: { tiers: MembershipTier[] }) {
   const [sessions, setSessions] = useState(4);
   const [lessons, setLessons] = useState(2);
-  const [fnb, setFnb] = useState(400000);
-  const [tierId, setTierId] = useState<MembershipTierId>('member');
+  const [fnb, setFnb] = useState(400_000);
+  const [tierId, setTierId] = useState<MembershipTierId>(tiers[0]?.id ?? 'member');
 
-  const result = useMemo(
-    () =>
-      estimateMembershipSaving({
-        sessionsPerMonth: sessions,
-        avgSessionPrice: 400000,
-        lessonsPerMonth: lessons,
-        avgLessonPrice: 850000,
-        fnbPerMonth: fnb,
-        tierId,
-      }),
-    [sessions, lessons, fnb, tierId],
-  );
+  const tier = tiers.find((item) => item.id === tierId) ?? tiers[0];
 
-  const tier = MEMBERSHIP_TIERS.find((item) => item.id === tierId);
+  const result = useMemo(() => {
+    const courtSpend = sessions * AVG_SESSION_PRICE;
+    const coachSpend = lessons * AVG_LESSON_PRICE;
+    const monthlySpend = courtSpend + coachSpend + fnb;
+    const monthlySaving = tier
+      ? Math.round(
+          (courtSpend * tier.courtDiscountPercent) / 100 +
+            (coachSpend * tier.coachDiscountPercent) / 100 +
+            (fnb * tier.fnbDiscountPercent) / 100,
+        )
+      : 0;
+    const bonusValue = tier ? Math.round((tier.topUpAmount * tier.bonusPercent) / 100) : 0;
+    return { monthlySpend, monthlySaving, yearlySaving: monthlySaving * 12, bonusValue };
+  }, [sessions, lessons, fnb, tier]);
 
   return (
     <div className="grid gap-8 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 md:p-8 lg:grid-cols-2 lg:gap-12">
@@ -41,8 +44,7 @@ export function MembershipCalculator() {
         </Badge>
         <h3 className="text-2xl">Hạng nào hợp với bạn?</h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">
-          Nhập thói quen sử dụng hằng tháng để xem mức tiết kiệm ước tính. Đây là con số tham khảo dựa trên giá
-          demo.
+          Nhập thói quen sử dụng hằng tháng để xem mức tiết kiệm ước tính. Đây là con số tham khảo.
         </p>
 
         <div className="mt-6 space-y-5">
@@ -89,7 +91,7 @@ export function MembershipCalculator() {
               value={tierId}
               onChange={(event) => setTierId(event.target.value as MembershipTierId)}
             >
-              {MEMBERSHIP_TIERS.map((item) => (
+              {tiers.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -131,8 +133,8 @@ export function MembershipCalculator() {
 
         <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-[var(--color-navy-200)]">
           <TrendingUp className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-          Ước tính dựa trên giá demo: 400.000đ/buổi tập, 850.000đ/buổi học với huấn luyện viên. Con số thực tế
-          thay đổi theo khung giờ và dịch vụ bạn chọn.
+          Ước tính tham khảo: ~{formatCurrency(AVG_SESSION_PRICE)}/buổi tập, ~{formatCurrency(AVG_LESSON_PRICE)}/buổi
+          học với HLV. Con số thực tế thay đổi theo khung giờ và dịch vụ bạn chọn.
         </p>
       </div>
     </div>
