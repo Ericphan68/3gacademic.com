@@ -258,9 +258,6 @@ export function DashboardOverview() {
             <div className="mb-4 flex items-center gap-2">
               <Sparkles className="size-4 text-[var(--color-gold)]" aria-hidden />
               <p className="text-sm font-medium text-[var(--color-champagne-800)]">Gợi ý cho bạn hôm nay</p>
-              <Badge variant="gold" size="sm" className="ml-auto">
-                Demo
-              </Badge>
             </div>
 
             <ul className="space-y-3 text-sm text-[var(--color-champagne-800)]">
@@ -318,8 +315,7 @@ export function DashboardOverview() {
             </ul>
 
             <p className="mt-4 text-xs leading-relaxed text-[var(--color-champagne-800)]/80">
-              Gợi ý được tạo từ dữ liệu lịch trống và lịch sử sử dụng trong bản demo, chưa kết nối hệ thống AI
-              thật.
+              Gợi ý dựa trên khung giờ trống và các ưu đãi hiện có tại Lotus.
             </p>
           </div>
 
