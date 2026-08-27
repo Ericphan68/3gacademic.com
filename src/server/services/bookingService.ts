@@ -45,6 +45,8 @@ export interface CreateBookingInput {
   coachName?: string | null;
   guests: number;
   voucherCode?: string | null;
+  coachId?: string | null;
+  zoneId?: string | null;
   contact: { fullName: string; phone: string; email?: string | null; note?: string | null };
   paymentMethod: string;
   paymentStatus: string;
@@ -66,73 +68,147 @@ export interface CreateBookingInput {
 
 const n = (v: number | undefined) => Math.max(0, Math.round(v ?? 0));
 
-/** Ghi đơn vào DB. Trả về id, hoặc ném lỗi (caller tự nuốt để không phá UX khách). */
-export async function createBooking(input: CreateBookingInput): Promise<{ id: string }> {
+export class BookingError extends Error {
+  constructor(
+    message: string,
+    readonly status = 400,
+  ) {
+    super(message);
+  }
+}
+
+/**
+ * Tạo đơn đặt lịch (nguyên tử):
+ *  - Chống đặt trùng HLV cùng khung giờ.
+ *  - Nếu trả bằng ví: trừ ví THẬT + ghi giao dịch trong cùng transaction.
+ *  - Lưu đơn kèm coachId/zoneId. Ném BookingError nếu trùng giờ / thiếu số dư.
+ * Trả về id đơn và số dư ví mới (null nếu không trừ ví).
+ */
+export async function createBooking(
+  input: CreateBookingInput,
+  sessionCustomerId?: string | null,
+): Promise<{ id: string; balance: number | null }> {
   const { contact } = input;
 
-  // Best-effort: gắn/khởi tạo khách theo số điện thoại.
-  let customerId: string | null = null;
-  try {
-    const customer = await prisma.customer.upsert({
-      where: { phone: contact.phone },
-      update: { fullName: contact.fullName, lastVisitAt: new Date() },
-      create: {
-        fullName: contact.fullName,
-        phone: contact.phone,
-        email: contact.email || null,
-      },
-    });
-    customerId = customer.id;
-  } catch {
-    customerId = null; // vd trùng email @unique — bỏ qua, đơn vẫn lưu.
+  // Ưu tiên khách đang đăng nhập; nếu không thì gắn/khởi tạo theo SĐT.
+  let customerId: string | null = sessionCustomerId ?? null;
+  if (!customerId) {
+    try {
+      const customer = await prisma.customer.upsert({
+        where: { phone: contact.phone },
+        update: { fullName: contact.fullName, lastVisitAt: new Date() },
+        create: { fullName: contact.fullName, phone: contact.phone, email: contact.email || null },
+      });
+      customerId = customer.id;
+    } catch {
+      customerId = null; // vd trùng email @unique — bỏ qua, đơn vẫn lưu.
+    }
   }
 
   const note = [contact.note, input.coachName ? `HLV: ${input.coachName}` : null]
     .filter(Boolean)
     .join(' · ') || null;
-
   const p = input.price;
-  const booking = await prisma.booking.create({
-    data: {
-      code: input.code,
-      customerId,
-      contactName: contact.fullName,
-      contactPhone: contact.phone,
-      contactEmail: contact.email || null,
-      note,
-      experienceLabel: input.experienceLabel,
-      zoneName: input.zoneName || null,
-      // Cột @db.Date chỉ lưu ngày; parse 'YYYY-MM-DD' theo UTC để giữ đúng ngày lịch.
-      date: new Date(input.date),
-      time: input.time,
-      durationMinutes: input.durationMinutes,
-      guests: input.guests,
-      voucherCode: input.voucherCode || null,
-      source: 'ONLINE',
-      status: STATUS[input.status ?? 'upcoming'] ?? 'CONFIRMED',
-      paymentMethod: PAY_METHOD[input.paymentMethod] ?? 'AT_CENTER',
-      paymentStatus: PAY_STATUS[input.paymentStatus] ?? 'UNPAID',
-      basePriceAmount: n(p.base),
-      zoneSurchargeAmount: n(p.zoneSurcharge),
-      coachFeeAmount: n(p.coachFee),
-      addOnsAmount: n(p.addOns),
-      subtotalAmount: n(p.subtotal),
-      membershipDiscount: n(p.membershipDiscount),
-      voucherDiscount: n(p.voucherDiscount),
-      walletApplied: n(p.walletApplied),
-      totalAmount: n(p.total),
-      qrPayload: input.qrPayload || null,
-      items: {
-        create: (input.addOns ?? []).map((a) => ({
-          name: a.name,
-          quantity: Math.max(1, Math.round(a.quantity ?? 1)),
-          unitPrice: n(a.unitPrice),
-        })),
+  const payByWallet =
+    input.paymentStatus === 'paid' && input.paymentMethod === 'wallet' && n(p.walletApplied) > 0;
+  const bookingDate = new Date(input.date);
+
+  return prisma.$transaction(async (tx) => {
+    // Gắn HLV theo tên (khớp DB) để có coachId thật + chống đặt trùng.
+    let coachId: string | null = null;
+    if (input.coachName) {
+      const coach = await tx.coach.findFirst({ where: { name: input.coachName }, select: { id: true } });
+      coachId = coach?.id ?? null;
+    }
+    if (coachId) {
+      const clash = await tx.booking.findFirst({
+        where: {
+          coachId,
+          date: bookingDate,
+          time: input.time,
+          status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+        },
+        select: { id: true },
+      });
+      if (clash) {
+        throw new BookingError(
+          'Khung giờ này với huấn luyện viên vừa có người đặt. Vui lòng chọn giờ khác.',
+          409,
+        );
+      }
+    }
+
+    let zoneId: string | null = null;
+    if (input.zoneName) {
+      const zone = await tx.practiceZone.findFirst({ where: { name: input.zoneName }, select: { id: true } });
+      zoneId = zone?.id ?? null;
+    }
+
+    // Trừ ví THẬT nếu thanh toán bằng ví Lotus.
+    let balance: number | null = null;
+    if (payByWallet) {
+      if (!customerId) throw new BookingError('Bạn cần đăng nhập để thanh toán bằng ví.', 401);
+      const c = await tx.customer.findUnique({ where: { id: customerId }, select: { walletBalance: true } });
+      const amount = n(p.walletApplied);
+      if (!c || c.walletBalance < amount) throw new BookingError('Số dư ví không đủ.', 400);
+      balance = c.walletBalance - amount;
+      await tx.customer.update({ where: { id: customerId }, data: { walletBalance: balance } });
+      await tx.transaction.create({
+        data: {
+          customerId,
+          type: 'PAYMENT',
+          label: `Thanh toán đặt lịch · ${input.code}`,
+          amount: -amount,
+          balanceAfter: balance,
+          reference: input.code,
+        },
+      });
+    }
+
+    const booking = await tx.booking.create({
+      data: {
+        code: input.code,
+        customerId,
+        coachId,
+        zoneId,
+        contactName: contact.fullName,
+        contactPhone: contact.phone,
+        contactEmail: contact.email || null,
+        note,
+        experienceLabel: input.experienceLabel,
+        zoneName: input.zoneName || null,
+        // Cột @db.Date chỉ lưu ngày; parse 'YYYY-MM-DD' theo UTC để giữ đúng ngày lịch.
+        date: bookingDate,
+        time: input.time,
+        durationMinutes: input.durationMinutes,
+        guests: input.guests,
+        voucherCode: input.voucherCode || null,
+        source: 'ONLINE',
+        status: STATUS[input.status ?? 'upcoming'] ?? 'CONFIRMED',
+        paymentMethod: PAY_METHOD[input.paymentMethod] ?? 'AT_CENTER',
+        paymentStatus: PAY_STATUS[input.paymentStatus] ?? 'UNPAID',
+        basePriceAmount: n(p.base),
+        zoneSurchargeAmount: n(p.zoneSurcharge),
+        coachFeeAmount: n(p.coachFee),
+        addOnsAmount: n(p.addOns),
+        subtotalAmount: n(p.subtotal),
+        membershipDiscount: n(p.membershipDiscount),
+        voucherDiscount: n(p.voucherDiscount),
+        walletApplied: n(p.walletApplied),
+        totalAmount: n(p.total),
+        qrPayload: input.qrPayload || null,
+        items: {
+          create: (input.addOns ?? []).map((a) => ({
+            name: a.name,
+            quantity: Math.max(1, Math.round(a.quantity ?? 1)),
+            unitPrice: n(a.unitPrice),
+          })),
+        },
       },
-    },
-    select: { id: true },
+      select: { id: true },
+    });
+    return { id: booking.id, balance };
   });
-  return booking;
 }
 
 export interface AdminBookingRow {

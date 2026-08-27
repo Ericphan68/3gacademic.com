@@ -25,7 +25,6 @@ import {
 } from '@/services/catalogService';
 import { calculateBookingPrice, resolveAddOns } from '@/services/pricingService';
 import { useAccountStore } from '@/store/useAccountStore';
-import { spendWalletServer } from '@/lib/wallet-client';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   BOOKING_STEPS,
@@ -245,21 +244,8 @@ export function BookingFlow() {
         toast.error('Bạn cần đăng nhập', { description: 'Đăng nhập để thanh toán bằng ví Lotus.' });
         return;
       }
-      void (async () => {
-        setSubmitting(true);
-        try {
-          const newBalance = await spendWalletServer(
-            price.walletApplied,
-            'Thanh toán đặt lịch Lotus',
-          );
-          await finalizeBooking('paid', newBalance);
-        } catch (e) {
-          setSubmitting(false);
-          toast.error('Thanh toán ví chưa thành công', {
-            description: e instanceof Error ? e.message : undefined,
-          });
-        }
-      })();
+      // Server sẽ trừ ví THẬT khi tạo đơn (nguyên tử). Không trừ trước ở client.
+      void finalizeBooking('paid');
       return;
     }
 
@@ -300,9 +286,8 @@ export function BookingFlow() {
     });
   };
 
-  const finalizeBooking = async (paymentStatus: PaymentStatus, serverBalance?: number) => {
+  const finalizeBooking = async (paymentStatus: PaymentStatus) => {
     setSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
 
     const experience = draft.experienceType
       ? bookingOptionService.getExperienceType(draft.experienceType)
@@ -335,44 +320,58 @@ export function BookingFlow() {
       qrPayload: `LOTUS|BOOKING|${code}|${draft.date}|${draft.time}`,
     };
 
+    // Lưu đơn lên server (nguồn dữ liệu chính): trừ ví THẬT + chống trùng HLV.
+    // Chỉ báo thành công khi server lưu xong; nếu lỗi thì dừng, không tạo đơn ảo.
+    let serverBalance: number | null = null;
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: booking.code,
+          experienceLabel: booking.experienceLabel,
+          date: booking.date,
+          time: booking.time,
+          durationMinutes: booking.durationMinutes,
+          zoneName: booking.zoneName,
+          coachName: booking.coachName,
+          guests: booking.guests,
+          voucherCode: booking.voucherCode ?? null,
+          contact: {
+            fullName: booking.contact.fullName,
+            phone: booking.contact.phone,
+            email: booking.contact.email ?? null,
+            note: booking.contact.note ?? null,
+          },
+          paymentMethod: booking.paymentMethod,
+          paymentStatus: booking.paymentStatus,
+          status: booking.status,
+          qrPayload: booking.qrPayload,
+          addOns: booking.addOns.map((a) => ({
+            name: a.name,
+            quantity: a.quantity ?? 1,
+            unitPrice: a.unitPrice ?? 0,
+          })),
+          price: booking.price,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { balance?: number; error?: string } | null;
+      if (!res.ok) {
+        setSubmitting(false);
+        toast.error('Chưa đặt được lịch', { description: data?.error ?? 'Vui lòng thử lại.' });
+        return;
+      }
+      if (typeof data?.balance === 'number') serverBalance = data.balance;
+    } catch {
+      setSubmitting(false);
+      toast.error('Lỗi kết nối', { description: 'Không lưu được đơn. Vui lòng thử lại.' });
+      return;
+    }
+
     addBooking(booking);
 
-    // Ghi thêm đơn vào database để Admin nhận được (best-effort, không chặn khách).
-    void fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code: booking.code,
-        experienceLabel: booking.experienceLabel,
-        date: booking.date,
-        time: booking.time,
-        durationMinutes: booking.durationMinutes,
-        zoneName: booking.zoneName,
-        coachName: booking.coachName,
-        guests: booking.guests,
-        voucherCode: booking.voucherCode ?? null,
-        contact: {
-          fullName: booking.contact.fullName,
-          phone: booking.contact.phone,
-          email: booking.contact.email ?? null,
-          note: booking.contact.note ?? null,
-        },
-        paymentMethod: booking.paymentMethod,
-        paymentStatus: booking.paymentStatus,
-        status: booking.status,
-        qrPayload: booking.qrPayload,
-        addOns: booking.addOns.map((a) => ({
-          name: a.name,
-          quantity: a.quantity ?? 1,
-          unitPrice: a.unitPrice ?? 0,
-        })),
-        price: booking.price,
-      }),
-    }).catch(() => {});
-
-    // Ví đã được trừ THẬT ở server (spendWalletServer). Cập nhật số dư hiển thị + ghi
-    // giao dịch để dashboard client phản ánh ngay.
-    if (paymentStatus === 'paid' && price.walletApplied > 0 && user && typeof serverBalance === 'number') {
+    // Ví đã được trừ THẬT ở server. Cập nhật số dư hiển thị + ghi giao dịch client.
+    if (paymentStatus === 'paid' && price.walletApplied > 0 && user && serverBalance !== null) {
       setWalletBalance(serverBalance);
       addTransaction({
         type: 'payment',
