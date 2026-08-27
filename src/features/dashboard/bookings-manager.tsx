@@ -65,10 +65,20 @@ export function BookingsManager() {
     setNewTime(booking.time);
   };
 
-  const confirmReschedule = () => {
+  const confirmReschedule = async () => {
     if (!rescheduling) return;
     if (isPastDate(newDate)) {
       toast.error('Ngày không hợp lệ', { description: 'Không thể chọn ngày đã qua.' });
+      return;
+    }
+    const res = await fetch('/api/bookings/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reschedule', code: rescheduling.code, date: newDate, time: newTime }),
+    });
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa đổi được lịch', { description: body?.error });
       return;
     }
     rescheduleBooking(rescheduling.id, newDate, newTime);
@@ -78,11 +88,21 @@ export function BookingsManager() {
     setRescheduling(null);
   };
 
-  const confirmCancel = () => {
+  const confirmCancel = async () => {
     if (!cancelling) return;
+    const res = await fetch('/api/bookings/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'cancel', code: cancelling.code }),
+    });
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa huỷ được đơn', { description: body?.error });
+      return;
+    }
     cancelBooking(cancelling.id);
     toast.success('Đã huỷ lịch đặt', {
-      description: `${cancelling.code} đã được huỷ. Giá trị đã thanh toán được hoàn vào ví Lotus.`,
+      description: `${cancelling.code} đã được huỷ. Nếu đã thanh toán, Lotus sẽ hỗ trợ hoàn tiền.`,
     });
     setCancelling(null);
   };
@@ -325,7 +345,7 @@ export function BookingsManager() {
                 <Button variant="ghost" onClick={() => setRescheduling(null)}>
                   Giữ lịch cũ
                 </Button>
-                <Button variant="accent" onClick={confirmReschedule}>
+                <Button variant="accent" onClick={() => void confirmReschedule()}>
                   Xác nhận đổi lịch
                 </Button>
               </DialogFooter>
@@ -351,7 +371,7 @@ export function BookingsManager() {
                 <Button variant="ghost" onClick={() => setCancelling(null)}>
                   Giữ lịch
                 </Button>
-                <Button variant="danger" onClick={confirmCancel}>
+                <Button variant="danger" onClick={() => void confirmCancel()}>
                   Xác nhận huỷ
                 </Button>
               </DialogFooter>

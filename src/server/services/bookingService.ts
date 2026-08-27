@@ -1,6 +1,14 @@
 import 'server-only';
 
 import { prisma } from '@/server/db';
+import type {
+  Booking,
+  BookingExperienceType,
+  BookingStatus as ClientBookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+  ZoneId,
+} from '@/types';
 
 /**
  * Lưu đơn đặt lịch thật vào database + đọc cho Admin.
@@ -209,6 +217,120 @@ export async function createBooking(
     });
     return { id: booking.id, balance };
   });
+}
+
+/** Khách tự huỷ đơn của mình (không tự hoàn tiền — admin xử lý hoàn nếu cần). */
+export async function cancelCustomerBooking(customerId: string, code: string): Promise<void> {
+  const b = await prisma.booking.findFirst({ where: { code, customerId }, select: { id: true, status: true } });
+  if (!b) throw new BookingError('Không tìm thấy đơn của bạn.', 404);
+  if (b.status === 'CANCELLED') return;
+  await prisma.booking.update({ where: { id: b.id }, data: { status: 'CANCELLED' } });
+}
+
+/** Khách đổi lịch đơn của mình (kiểm HLV không trùng giờ mới). */
+export async function rescheduleCustomerBooking(
+  customerId: string,
+  code: string,
+  date: string,
+  time: string,
+): Promise<void> {
+  const b = await prisma.booking.findFirst({
+    where: { code, customerId },
+    select: { id: true, coachId: true, status: true },
+  });
+  if (!b) throw new BookingError('Không tìm thấy đơn của bạn.', 404);
+  if (b.status === 'CANCELLED') throw new BookingError('Đơn đã huỷ, không đổi được lịch.');
+  const newDate = new Date(date);
+  if (b.coachId) {
+    const clash = await prisma.booking.findFirst({
+      where: {
+        coachId: b.coachId,
+        date: newDate,
+        time,
+        status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+        id: { not: b.id },
+      },
+      select: { id: true },
+    });
+    if (clash) throw new BookingError('Khung giờ mới với huấn luyện viên đã có người đặt.', 409);
+  }
+  await prisma.booking.update({ where: { id: b.id }, data: { date: newDate, time } });
+}
+
+const PAY_METHOD_BACK: Record<string, PaymentMethod> = {
+  WALLET: 'wallet',
+  MOMO: 'momo',
+  VNPAY: 'vnpay',
+  CARD: 'card',
+  TRANSFER: 'transfer',
+  AT_CENTER: 'at-center',
+};
+
+function payStatusBack(dbStatus: string, method: PaymentMethod): PaymentStatus {
+  if (dbStatus === 'PAID' || dbStatus === 'PAID_AT_COUNTER') return 'paid';
+  return method === 'transfer' ? 'pending' : 'pay-later';
+}
+
+function statusBack(dbStatus: string): ClientBookingStatus {
+  if (dbStatus === 'COMPLETED') return 'completed';
+  if (dbStatus === 'CANCELLED' || dbStatus === 'NO_SHOW') return 'cancelled';
+  return 'upcoming';
+}
+
+/** Danh sách đơn đặt lịch THẬT của khách (từ DB) — dạng type Booking cho dashboard. */
+export async function listCustomerBookings(customerId: string): Promise<Booking[]> {
+  try {
+    const rows = await prisma.booking.findMany({
+      where: { customerId },
+      orderBy: { date: 'desc' },
+      take: 100,
+      include: { items: true, coach: { select: { name: true } } },
+    });
+    return rows.map((b): Booking => {
+      const method = PAY_METHOD_BACK[b.paymentMethod] ?? 'at-center';
+      return {
+        id: b.id,
+        code: b.code,
+        experienceType: 'range' as BookingExperienceType,
+        experienceLabel: b.experienceLabel,
+        date: b.date.toISOString().slice(0, 10),
+        time: b.time,
+        durationMinutes: b.durationMinutes,
+        zoneId: 'driving-range' as ZoneId,
+        zoneName: b.zoneName ?? '',
+        coachId: b.coachId,
+        coachName: b.coach?.name ?? null,
+        guests: b.guests,
+        addOns: b.items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity, unitPrice: it.unitPrice })),
+        voucherCode: b.voucherCode,
+        contact: {
+          fullName: b.contactName,
+          phone: b.contactPhone,
+          email: b.contactEmail ?? '',
+          note: b.note ?? '',
+          isFirstTime: false,
+        },
+        paymentMethod: method,
+        paymentStatus: payStatusBack(b.paymentStatus, method),
+        price: {
+          base: b.basePriceAmount,
+          zoneSurcharge: b.zoneSurchargeAmount,
+          coachFee: b.coachFeeAmount,
+          addOns: b.addOnsAmount,
+          subtotal: b.subtotalAmount,
+          membershipDiscount: b.membershipDiscount,
+          voucherDiscount: b.voucherDiscount,
+          walletApplied: b.walletApplied,
+          total: b.totalAmount,
+        },
+        status: statusBack(b.status),
+        createdAt: b.createdAt.toISOString(),
+        qrPayload: b.qrPayload ?? `LOTUS|BOOKING|${b.code}`,
+      };
+    });
+  } catch {
+    return [];
+  }
 }
 
 export interface AdminBookingRow {

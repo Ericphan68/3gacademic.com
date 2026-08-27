@@ -40,6 +40,8 @@ interface AccountState {
   ownerId: string | null;
 
   addBooking: (booking: Booking) => void;
+  /** Gộp đơn THẬT từ server (ưu tiên server, giữ đơn client chưa đồng bộ theo mã). */
+  mergeServerBookings: (server: Booking[]) => void;
   cancelBooking: (id: string) => void;
   rescheduleBooking: (id: string, date: string, time: string) => void;
   markBookingPaid: (id: string) => void;
@@ -80,6 +82,7 @@ const EMPTY = {
 } satisfies Omit<
   AccountState,
   | 'addBooking'
+  | 'mergeServerBookings'
   | 'cancelBooking'
   | 'rescheduleBooking'
   | 'markBookingPaid'
@@ -103,6 +106,13 @@ export const useAccountStore = create<AccountState>()(
       ...EMPTY,
 
       addBooking: (booking) => set((state) => ({ bookings: [booking, ...state.bookings] })),
+
+      mergeServerBookings: (server) =>
+        set((state) => {
+          const codes = new Set(server.map((b) => b.code));
+          const clientOnly = state.bookings.filter((b) => !codes.has(b.code));
+          return { bookings: [...server, ...clientOnly] };
+        }),
 
       cancelBooking: (id) =>
         set((state) => ({
