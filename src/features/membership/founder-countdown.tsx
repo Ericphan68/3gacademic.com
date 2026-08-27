@@ -111,7 +111,7 @@ export function FounderCountdown({ tier }: { tier: MembershipTier }) {
           </div>
 
           <p className="mt-5 text-xs leading-relaxed text-[var(--color-navy-200)]">
-            Số liệu hiển thị là dữ liệu demo dùng để trình diễn giao diện.
+            Ưu đãi Founder có số lượng giới hạn — đăng ký sớm để giữ suất.
           </p>
         </div>
       </div>

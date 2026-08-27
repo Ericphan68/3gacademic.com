@@ -149,7 +149,7 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
               {result.attendees} người tham dự · {result.fee === 0 ? 'Miễn phí' : formatCurrency(result.fee)}
             </p>
             <Badge variant="neutral" size="sm" className="mt-2">
-              Mã QR minh hoạ cho bản demo
+              Mã QR check-in sự kiện
             </Badge>
           </div>
         </div>
@@ -315,7 +315,7 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
         </Button>
 
         <p className="text-center text-xs text-[var(--color-muted)]">
-          Đây là luồng demo — không có giao dịch thật nào được thực hiện.
+          Đăng ký được ghi nhận ngay. Lotus sẽ liên hệ xác nhận với bạn.
         </p>
       </form>
     </div>

@@ -125,12 +125,12 @@ export function VoucherExplorer({ catalog }: { catalog?: Voucher[] }) {
         ) : owned.length === 0 ? (
           <EmptyState
             title="Bạn chưa có voucher nào"
-            description="Đăng nhập bằng tài khoản demo rồi lưu hoặc mua voucher — chúng sẽ xuất hiện ở đây và tự động áp dụng khi đặt lịch."
+            description="Đăng nhập rồi lưu hoặc mua voucher — chúng sẽ xuất hiện ở đây và tự động áp dụng khi đặt lịch."
             icon={Gift}
             action={
               <div className="flex flex-wrap justify-center gap-3">
                 <Button asChild variant="accent">
-                  <Link href="/login">Đăng nhập tài khoản demo</Link>
+                  <Link href="/login">Đăng nhập</Link>
                 </Button>
                 <Button variant="outline" onClick={() => setTab('all')}>
                   Xem voucher đang mở
