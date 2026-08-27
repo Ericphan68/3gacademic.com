@@ -281,7 +281,6 @@ export const FOOTER_NAV: NavGroup[] = [
     items: [
       { label: 'Lotus Golf Academy', labelEn: 'Academy', href: '/academy' },
       { label: 'Huấn luyện viên', labelEn: 'Coaches', href: '/coaches' },
-      { label: 'Coach Portal', labelEn: 'Coach Portal', href: '/coach-portal' },
     ],
   },
   {

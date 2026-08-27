@@ -147,6 +147,48 @@ export async function getCustomerAccount(id: string): Promise<User | null> {
   return toUser(c, membership ? { tier: membership.plan.key, expiresAt: membership.expiresAt } : null);
 }
 
+export interface UpdateProfileInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  drink?: string | null;
+}
+
+/** Khách tự cập nhật hồ sơ. Ném AuthError nếu email/SĐT trùng người khác. */
+export async function updateCustomerProfile(customerId: string, input: UpdateProfileInput): Promise<User> {
+  const email = input.email.trim().toLowerCase();
+  const phone = input.phone.trim();
+  const fullName = input.fullName.trim();
+
+  const clash = await prisma.customer.findFirst({
+    where: { id: { not: customerId }, OR: [{ email }, { phone }] },
+    select: { email: true, phone: true },
+  });
+  if (clash) {
+    if (clash.email === email) throw new AuthError('Email này đã được người khác sử dụng.', 409);
+    throw new AuthError('Số điện thoại này đã được người khác sử dụng.', 409);
+  }
+
+  try {
+    await prisma.customer.update({
+      where: { id: customerId },
+      data: {
+        fullName,
+        email,
+        phone,
+        avatarInitials: initials(fullName),
+        ...(input.drink !== undefined ? { preferredDrink: input.drink } : {}),
+      },
+    });
+  } catch {
+    throw new AuthError('Không cập nhật được hồ sơ.', 500);
+  }
+
+  const updated = await getCustomerAccount(customerId);
+  if (!updated) throw new AuthError('Không tìm thấy khách hàng.', 404);
+  return updated;
+}
+
 /** Admin đặt lại mật khẩu cho khách (khi khách cần hỗ trợ). */
 export async function adminResetCustomerPassword(customerId: string, newPassword: string): Promise<void> {
   const passwordHash = await hashPassword(newPassword);

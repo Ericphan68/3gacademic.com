@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { PortalHeader } from '@/components/dashboard/portal-shell';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Label, Select, Switch, Textarea } from '@/components/ui/form-fields';
 import { InitialsAvatar } from '@/components/ui/misc';
@@ -66,7 +65,22 @@ export function ProfileForm() {
   }
 
   const onSubmit = async (values: FormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    const res = await fetch('/api/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        drink: values.drink,
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as { user?: unknown; error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa lưu được hồ sơ', { description: body?.error });
+      return;
+    }
+    // Cập nhật hiển thị ngay (server là nguồn thật; goal chỉ lưu ở client).
     updateProfile({ fullName: values.fullName, email: values.email, phone: values.phone });
     updatePreferences({ drink: values.drink, goal: values.goal });
     toast.success('Đã lưu thay đổi', { description: 'Thông tin hồ sơ của bạn đã được cập nhật.' });
@@ -250,14 +264,11 @@ export function ProfileForm() {
             <div className="mb-4 flex items-center gap-2">
               <ShieldCheck className="size-4 text-[var(--color-accent)]" aria-hidden />
               <h2 className="text-lg">Bảo mật</h2>
-              <Badge variant="neutral" size="sm" className="ml-auto">
-                Demo
-              </Badge>
             </div>
 
             <p className="text-sm leading-relaxed text-[var(--color-muted)]">
-              Phiên bản này dùng hệ thống đăng nhập minh hoạ, dữ liệu chỉ lưu trong trình duyệt của bạn. Các
-              chức năng bảo mật thật (đổi mật khẩu, xác thực hai lớp) sẽ được bật khi kết nối backend.
+              Tài khoản và hồ sơ của bạn được lưu an toàn. Nếu cần đổi mật khẩu, vui lòng liên hệ Lotus để được
+              hỗ trợ đặt lại.
             </p>
 
             <div className="mt-5 space-y-2">
@@ -265,8 +276,8 @@ export function ProfileForm() {
                 variant="outline"
                 block
                 onClick={() =>
-                  toast.info('Chức năng đổi mật khẩu chưa khả dụng', {
-                    description: 'Sẽ được bật ở giai đoạn tích hợp hệ thống xác thực thật.',
+                  toast.info('Đổi mật khẩu', {
+                    description: 'Vui lòng liên hệ hotline/Zalo Lotus để được hỗ trợ đặt lại mật khẩu.',
                   })
                 }
               >
@@ -279,13 +290,11 @@ export function ProfileForm() {
                 block
                 onClick={() => {
                   resetAccount();
-                  toast.success('Đã xoá dữ liệu demo', {
-                    description: 'Booking, giao dịch, voucher và sự kiện trong phiên demo đã được xoá.',
-                  });
+                  toast.success('Đã xoá dữ liệu tạm trên thiết bị này');
                 }}
               >
                 <Trash2 aria-hidden />
-                Xoá dữ liệu demo trong tài khoản
+                Xoá dữ liệu tạm trên thiết bị này
               </Button>
             </div>
           </section>
