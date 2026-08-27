@@ -8,6 +8,8 @@ import { EventExplorer } from '@/features/events/event-explorer';
 import { buildMetadata } from '@/lib/seo';
 import { getManagedEvents } from '@/server/services/eventService';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = buildMetadata({
   title: 'Sự kiện và giải đấu golf',
   description:

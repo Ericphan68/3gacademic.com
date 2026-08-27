@@ -16,6 +16,9 @@ import { EventRegistrationForm } from '@/features/events/event-registration';
 import { formatCurrency, formatDateLong, formatTime } from '@/lib/format';
 import { buildMetadata, eventJsonLd } from '@/lib/seo';
 import { eventService } from '@/services/catalogService';
+import { getManagedEvent } from '@/server/services/eventService';
+
+export const dynamic = 'force-dynamic';
 
 export function generateStaticParams() {
   return eventService.getAll().map((event) => ({ slug: event.slug }));
@@ -44,7 +47,7 @@ export async function generateMetadata(props: PageProps<'/events/[slug]'>): Prom
 
 export default async function EventDetailPage(props: PageProps<'/events/[slug]'>) {
   const { slug } = await props.params;
-  const event = eventService.getBySlug(slug);
+  const event = await getManagedEvent(slug);
   if (!event) notFound();
 
   const related = eventService

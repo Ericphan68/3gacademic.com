@@ -47,6 +47,7 @@ export interface EventAdminRow {
 }
 
 interface DbEventRow {
+  id: string;
   slug: string;
   title: string;
   summary: string | null;
@@ -59,6 +60,7 @@ interface DbEventRow {
 }
 
 const SELECT = {
+  id: true,
   slug: true,
   title: true,
   summary: true,
@@ -70,8 +72,8 @@ const SELECT = {
   isPublished: true,
 } as const;
 
-function mergeEvent(base: GolfEvent, row: DbEventRow | undefined): GolfEvent {
-  if (!row) return base;
+function mergeEvent(base: GolfEvent, row: DbEventRow | undefined, registered?: number): GolfEvent {
+  if (!row) return { ...base, registered: registered ?? 0 };
   return {
     ...base,
     title: row.title,
@@ -79,6 +81,7 @@ function mergeEvent(base: GolfEvent, row: DbEventRow | undefined): GolfEvent {
     location: row.location ?? base.location,
     fee: row.fee,
     capacity: row.capacity,
+    registered: registered ?? 0,
     startsAt: toIsoVN(row.startsAt),
   };
 }
@@ -88,17 +91,50 @@ async function loadRows(): Promise<Map<string, DbEventRow>> {
   return new Map(rows.map((r) => [r.slug, r]));
 }
 
-/** Danh sách sự kiện hiển thị cho public (ẩn sự kiện đã tắt). */
+/** Số người đã đăng ký (tổng attendees, trạng thái REGISTERED) theo eventId. */
+async function registeredCounts(): Promise<Map<string, number>> {
+  const grouped = await prisma.eventRegistration.groupBy({
+    by: ['eventId'],
+    where: { status: 'REGISTERED' },
+    _sum: { attendees: true },
+  });
+  return new Map(grouped.map((g) => [g.eventId, g._sum.attendees ?? 0]));
+}
+
+/** Danh sách sự kiện hiển thị cho public (ẩn sự kiện đã tắt), số chỗ đã đăng ký là THẬT. */
 export async function getManagedEvents(): Promise<GolfEvent[]> {
   try {
-    const byslug = await loadRows();
-    if (byslug.size === 0) return EVENTS;
-    return EVENTS.map((e) => mergeEvent(e, byslug.get(e.slug))).filter((e) => {
+    const [byslug, counts] = await Promise.all([loadRows(), registeredCounts()]);
+    return EVENTS.map((e) => {
+      const row = byslug.get(e.slug);
+      const registered = row ? (counts.get(row.id) ?? 0) : 0;
+      return mergeEvent(e, row, registered);
+    }).filter((e) => {
       const row = byslug.get(e.slug);
       return row ? row.isPublished : true;
     });
   } catch {
     return EVENTS;
+  }
+}
+
+/** 1 sự kiện theo slug cho trang chi tiết (số chỗ đã đăng ký là THẬT). */
+export async function getManagedEvent(slug: string): Promise<GolfEvent | null> {
+  const base = EVENTS.find((e) => e.slug === slug);
+  if (!base) return null;
+  try {
+    const row = await prisma.event.findFirst({ where: { slug, deletedAt: null }, select: SELECT });
+    let registered = 0;
+    if (row) {
+      const agg = await prisma.eventRegistration.aggregate({
+        where: { eventId: row.id, status: 'REGISTERED' },
+        _sum: { attendees: true },
+      });
+      registered = agg._sum.attendees ?? 0;
+    }
+    return mergeEvent(base, row ?? undefined, registered);
+  } catch {
+    return base;
   }
 }
 

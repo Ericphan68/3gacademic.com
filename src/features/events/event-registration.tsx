@@ -17,7 +17,6 @@ import { PAYMENT_METHODS } from '@/data/booking-options';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency, formatDateLong, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { spendWalletServer } from '@/lib/wallet-client';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { EventRegistration, GolfEvent, PaymentMethod } from '@/types';
@@ -70,8 +69,6 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
       toast.info('Bạn đã đăng ký sự kiện này rồi.');
       return;
     }
-
-    // Thanh toán bằng ví → trừ ví THẬT ở server trước khi ghi nhận đăng ký.
     if (paymentMethod === 'wallet' && total > 0) {
       if (!user) {
         toast.error('Bạn cần đăng nhập', { description: 'Đăng nhập để thanh toán bằng ví.' });
@@ -83,19 +80,32 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
         });
         return;
       }
-      let nextBalance: number;
-      try {
-        nextBalance = await spendWalletServer(total, `Phí sự kiện · ${event.title}`);
-      } catch (e) {
-        toast.error('Thanh toán ví chưa thành công', { description: e instanceof Error ? e.message : undefined });
-        return;
-      }
-      setWalletBalance(nextBalance);
+    }
+
+    // Đăng ký lưu THẬT ở server (đếm chỗ + chống trùng + trừ ví nếu trả ví).
+    const res = await fetch('/api/events/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slug: event.slug,
+        attendees,
+        paymentMethod,
+        contact: { fullName: values.fullName, phone: values.phone, email: values.email },
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as { balance?: number; error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa đăng ký được', { description: body?.error });
+      return;
+    }
+
+    if (typeof body?.balance === 'number') {
+      setWalletBalance(body.balance);
       addTransaction({
         type: 'payment',
         label: `Phí sự kiện · ${event.title}`,
         amount: -total,
-        balanceAfter: nextBalance,
+        balanceAfter: body.balance,
       });
     }
 
@@ -111,9 +121,8 @@ export function EventRegistrationForm({ event }: { event: GolfEvent }) {
 
     setResult(entry);
     toast.success('Đăng ký sự kiện thành công', {
-      description: `${event.title} — thông tin đã lưu trong tài khoản của bạn.`,
+      description: `${event.title} — Lotus sẽ liên hệ xác nhận với bạn.`,
     });
-    void values;
   };
 
   if (result) {
