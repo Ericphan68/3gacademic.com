@@ -88,7 +88,7 @@ export function CorporateQuoteForm() {
     setSubmitted(true);
     reset();
     toast.success('Đã gửi yêu cầu báo giá', {
-      description: 'Lotus sẽ liên hệ trong 24 giờ làm việc. Yêu cầu đã được lưu ở phiên demo này.',
+      description: 'Lotus sẽ liên hệ trong 24 giờ làm việc.',
     });
   };
 
@@ -272,8 +272,7 @@ export function CorporateQuoteForm() {
 
         <div className="flex items-start gap-3 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] p-4">
           <Label className="text-xs leading-relaxed font-normal text-[var(--color-muted)]">
-            Thông tin bạn gửi chỉ được lưu trong trình duyệt của bạn ở phiên bản demo này và không được truyền
-            đi bất kỳ đâu.
+            Thông tin bạn gửi được bảo mật và chỉ dùng để Lotus liên hệ, báo giá cho doanh nghiệp của bạn.
           </Label>
         </div>
 

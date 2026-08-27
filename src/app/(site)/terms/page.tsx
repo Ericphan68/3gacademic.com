@@ -13,7 +13,7 @@ const SECTIONS: LegalSection[] = [
     heading: 'Chấp nhận điều khoản',
     paragraphs: [
       'Khi sử dụng website và dịch vụ của Lotus Golf Center, bạn đồng ý với các điều khoản dưới đây. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.',
-      'Phiên bản website hiện tại là bản demo giao diện. Các giao dịch, thanh toán và tài khoản trên bản demo không có giá trị pháp lý và không phát sinh nghĩa vụ tài chính.',
+      'Bằng việc đăng ký tài khoản và sử dụng dịch vụ, bạn đồng ý với các điều khoản này. Các giao dịch (nạp ví, đăng ký hội viên, đặt lịch) được ghi nhận trên hệ thống của Lotus Golf Center.',
     ],
   },
   {

@@ -153,8 +153,7 @@ export function ContactForm() {
       </Field>
 
       <p className="text-xs leading-relaxed text-[var(--color-muted)]">
-        Thông tin bạn gửi chỉ được lưu trong trình duyệt của bạn ở phiên bản demo này và không được truyền đi
-        bất kỳ đâu.
+        Thông tin bạn gửi được bảo mật và chỉ dùng để Lotus liên hệ, tư vấn cho bạn.
       </p>
 
       <Button type="submit" variant="accent" size="lg" block loading={isSubmitting}>

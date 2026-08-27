@@ -31,7 +31,7 @@ const TOPICS: Topic[] = [
     id: 'beginner',
     question: 'Tôi chưa từng chơi golf, nên bắt đầu từ đâu?',
     answer:
-      'Bạn nên bắt đầu bằng gói Lotus Discovery — 60 phút, có nhân viên hướng dẫn đi cùng từ đầu đến cuối, đã bao gồm gậy và bóng. Giá demo 390.000đ. Nếu muốn học bài bản ngay, chọn First Swing Experience 90 phút với huấn luyện viên.',
+      'Bạn nên bắt đầu bằng gói Lotus Discovery — 60 phút, có nhân viên hướng dẫn đi cùng từ đầu đến cuối, đã bao gồm gậy và bóng. Giá 390.000đ. Nếu muốn học bài bản ngay, chọn First Swing Experience 90 phút với huấn luyện viên.',
     links: [
       { label: 'Xem gói cho người mới', href: '/experience' },
       { label: 'Đặt lịch ngay', href: '/booking' },

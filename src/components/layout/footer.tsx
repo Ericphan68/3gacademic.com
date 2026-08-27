@@ -106,9 +106,6 @@ export async function Footer() {
           <p>
             © {year} {SITE.legalName}. Bảo lưu mọi quyền.
           </p>
-          <p className="text-[var(--color-navy-300)]">
-            Phiên bản demo giao diện — dữ liệu hiển thị là dữ liệu mẫu.
-          </p>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/chinh-sach-hop-tac" className="transition-colors hover:text-white">
               Chính sách hợp tác

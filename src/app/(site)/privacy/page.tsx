@@ -13,7 +13,7 @@ const SECTIONS: LegalSection[] = [
     heading: 'Phạm vi áp dụng',
     paragraphs: [
       'Chính sách này áp dụng cho website Lotus Golf Center và các dịch vụ được cung cấp thông qua website, bao gồm đặt lịch, đăng ký hội viên, mua voucher, đăng ký sự kiện và đặt món F&B.',
-      'Phiên bản hiện tại của website là bản demo giao diện. Mọi dữ liệu bạn nhập được lưu trong trình duyệt của chính bạn (localStorage) và không được gửi tới bất kỳ máy chủ nào.',
+      'Thông tin bạn cung cấp khi đăng ký tài khoản, đặt lịch hoặc để lại liên hệ được lưu trữ an toàn trên hệ thống của Lotus và chỉ dùng để cung cấp dịch vụ, chăm sóc khách hàng cho bạn.',
     ],
   },
   {
@@ -68,13 +68,13 @@ const SECTIONS: LegalSection[] = [
     heading: 'Bảo mật dữ liệu',
     paragraphs: [
       'Lotus áp dụng các biện pháp kỹ thuật và tổ chức phù hợp để bảo vệ dữ liệu: mã hoá đường truyền, phân quyền truy cập theo vai trò và ghi nhật ký thao tác trên hệ thống quản trị.',
-      'Lotus không lưu mật khẩu ở dạng có thể đọc được. Ở bản demo hiện tại, hệ thống đăng nhập chỉ mang tính minh hoạ và không nên dùng mật khẩu thật của bạn.',
+      'Lotus không lưu mật khẩu ở dạng có thể đọc được — mật khẩu luôn được mã hoá an toàn (bcrypt). Nếu quên mật khẩu, vui lòng liên hệ Lotus để được hỗ trợ đặt lại.',
     ],
   },
   {
     heading: 'Cookie và công nghệ tương tự',
     paragraphs: [
-      'Website sử dụng bộ nhớ cục bộ của trình duyệt để ghi nhớ lựa chọn ngôn ngữ, giao diện sáng/tối và dữ liệu demo của bạn. Bạn có thể xoá các dữ liệu này bất cứ lúc nào trong phần cài đặt trình duyệt.',
+      'Website sử dụng bộ nhớ cục bộ của trình duyệt để ghi nhớ lựa chọn ngôn ngữ và giao diện sáng/tối. Bạn có thể xoá các dữ liệu này bất cứ lúc nào trong phần cài đặt trình duyệt.',
     ],
   },
   {
