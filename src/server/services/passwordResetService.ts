@@ -2,12 +2,11 @@ import 'server-only';
 
 import { addHours } from 'date-fns';
 
+import { SITE_URL } from '@/constants/site';
 import { hashPassword } from '@/server/auth/password';
 import { sendEmail } from '@/server/email/brevo';
 import { prisma } from '@/server/db';
 import { newVerifyToken } from '@/server/services/customerAuthService';
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://lotusgolfcenter.com';
 
 function resetHtml(name: string, link: string): string {
   return `

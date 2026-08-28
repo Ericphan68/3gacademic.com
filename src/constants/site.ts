@@ -1,5 +1,19 @@
 /** Cấu hình trung tâm cho thương hiệu, liên hệ và SEO. */
 
+const PRODUCTION_URL = 'https://lotusgolfcenter.com';
+
+/**
+ * URL gốc của website.
+ * Ở production LUÔN dùng domain thật (lotusgolfcenter.com) để không bị phụ thuộc
+ * vào biến NEXT_PUBLIC_SITE_URL trên máy chủ — biến này từng bị đặt nhầm sang
+ * domain khác, làm hỏng link email xác nhận và các thẻ SEO (canonical/og/sitemap).
+ * Chỉ khi chạy dev (localhost) mới cho phép ghi đè bằng biến môi trường.
+ */
+export const SITE_URL =
+  process.env.NODE_ENV === 'production'
+    ? PRODUCTION_URL
+    : process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
 export const SITE = {
   name: 'Lotus Golf Center',
   shortName: 'Lotus Golf',
@@ -9,7 +23,7 @@ export const SITE = {
   heroHeadline: 'A New Standard of Golf Experience',
   description:
     'Trải nghiệm golf, học tập, kết nối và thư giãn trong một không gian được vận hành bằng công nghệ và phục vụ bằng sự tận tâm.',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  url: SITE_URL,
   locale: 'vi_VN',
   ogImage: '/images/og-default.jpg',
 } as const;
