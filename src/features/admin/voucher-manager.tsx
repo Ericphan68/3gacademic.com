@@ -23,6 +23,8 @@ export interface VoucherRow {
   memberOnly: boolean;
   hot: boolean;
   visible: boolean;
+  soldCount: number;
+  totalQuantity: number;
 }
 
 export function VoucherManager({ vouchers }: { vouchers: VoucherRow[] }) {
@@ -118,6 +120,9 @@ function VoucherCard({ voucher }: { voucher: VoucherRow }) {
           <p className="text-xs text-[var(--color-muted)]">{form.categoryLabel}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Badge variant="neutral" size="sm">
+            Đã bán {saved.soldCount}/{saved.totalQuantity}
+          </Badge>
           {form.hot ? (
             <Badge variant="gold" size="sm">
               Hot

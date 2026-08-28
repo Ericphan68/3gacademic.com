@@ -46,6 +46,8 @@ export interface VoucherAdminRow {
   memberOnly: boolean;
   hot: boolean;
   visible: boolean;
+  soldCount: number;
+  totalQuantity: number;
 }
 
 const toDateInput = (d: Date): string => d.toISOString().slice(0, 10);
@@ -132,10 +134,12 @@ export async function getManagedVouchers(): Promise<Voucher[]> {
 export async function listVouchersForAdmin(): Promise<VoucherAdminRow[]> {
   const { VOUCHER_CATEGORY_LABELS } = await import('@/data/vouchers');
   let byCode = new Map<string, DbVoucherRow>();
+  let counts = new Map<string, number>();
   try {
-    byCode = await loadRows();
+    [byCode, counts] = await Promise.all([loadRows(), soldCounts()]);
   } catch {
     byCode = new Map();
+    counts = new Map();
   }
 
   return VOUCHERS.map((base) => {
@@ -155,6 +159,8 @@ export async function listVouchersForAdmin(): Promise<VoucherAdminRow[]> {
       hot: merged.hot,
       // Chưa có bản ghi DB → coi như đang hiển thị (theo mock).
       visible: row ? row.status === 'ACTIVE' : true,
+      soldCount: row ? (counts.get(row.id) ?? 0) : 0,
+      totalQuantity: base.totalQuantity,
     } satisfies VoucherAdminRow;
   });
 }
