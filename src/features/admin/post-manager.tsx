@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Label, Switch, Textarea } from '@/components/ui/form-fields';
 import { EmptyState } from '@/components/ui/states';
+import { uploadAdminImage } from '@/lib/image-upload';
 
 export interface PostRow {
   id: string;
@@ -51,50 +52,8 @@ const EMPTY: FormState = {
 
 const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString('vi-VN') : '—');
 
-/** Đọc file ảnh, thu nhỏ & nén (trừ GIF giữ nguyên) thành dataURL để tải lên. */
-async function fileToCompressedDataUrl(file: File, maxDim = 1600, quality = 0.82): Promise<string> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = () => resolve(fr.result as string);
-    fr.onerror = () => reject(new Error('read'));
-    fr.readAsDataURL(file);
-  });
-  if (file.type === 'image/gif') return dataUrl; // giữ ảnh động
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = () => reject(new Error('decode'));
-    i.src = dataUrl;
-  });
-  let { width, height } = img;
-  const longest = Math.max(width, height);
-  if (longest > maxDim) {
-    const s = maxDim / longest;
-    width = Math.round(width * s);
-    height = Math.round(height * s);
-  }
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return dataUrl;
-  ctx.drawImage(img, 0, 0, width, height);
-  return canvas.toDataURL('image/jpeg', quality);
-}
-
 /** Nén + tải 1 ảnh lên server, trả về link công khai (/api/media/...). */
-async function uploadImageFile(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('Vui lòng chọn tệp ảnh.');
-  const dataUrl = await fileToCompressedDataUrl(file);
-  const res = await fetch('/api/admin/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ dataUrl }),
-  });
-  const body = (await res.json().catch(() => null)) as { url?: string; error?: string } | null;
-  if (!res.ok || !body?.url) throw new Error(body?.error ?? 'Tải ảnh thất bại.');
-  return body.url;
-}
+const uploadImageFile = uploadAdminImage;
 
 export function PostManager({ posts }: { posts: PostRow[] }) {
   const router = useRouter();

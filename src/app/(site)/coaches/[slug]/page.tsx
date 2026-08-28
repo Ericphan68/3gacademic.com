@@ -15,14 +15,13 @@ import { CoachBookingPanel } from '@/features/coaches/coach-booking-panel';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { buildMetadata } from '@/lib/seo';
 import { coachService } from '@/services/catalogService';
+import { getManagedCoachBySlug } from '@/server/services/coachService';
 
-export function generateStaticParams() {
-  return coachService.getAll().map((coach) => ({ slug: coach.slug }));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(props: PageProps<'/coaches/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
-  const coach = coachService.getBySlug(slug);
+  const coach = await getManagedCoachBySlug(slug);
   if (!coach) {
     return buildMetadata({
       title: 'Không tìm thấy huấn luyện viên',
@@ -43,7 +42,7 @@ export async function generateMetadata(props: PageProps<'/coaches/[slug]'>): Pro
 
 export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'>) {
   const { slug } = await props.params;
-  const coach = coachService.getBySlug(slug);
+  const coach = await getManagedCoachBySlug(slug);
   if (!coach) notFound();
 
   const related = coachService
@@ -134,6 +133,7 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
             </div>
 
             {/* Phù hợp với ai */}
+            {coach.suitableFor.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Phù hợp với ai</h2>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -148,8 +148,10 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
                 ))}
               </ul>
             </div>
+            ) : null}
 
             {/* Chứng chỉ & kinh nghiệm */}
+            {coach.certifications.length > 0 || coach.careerHighlights.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2">
               <div>
                 <h2 className="rule-gold text-2xl">Chứng chỉ</h2>
@@ -177,8 +179,10 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
                 </ul>
               </div>
             </div>
+            ) : null}
 
             {/* Chương trình */}
+            {coach.programs.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Chương trình học</h2>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -208,6 +212,7 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
                 ))}
               </div>
             </div>
+            ) : null}
 
             {/* Thông số */}
             <div>
@@ -232,6 +237,7 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
             </div>
 
             {/* Đánh giá */}
+            {coach.reviews.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Học viên nói gì</h2>
               <div className="mt-6 space-y-4">
@@ -257,13 +263,16 @@ export default async function CoachDetailPage(props: PageProps<'/coaches/[slug]'
                 ))}
               </div>
             </div>
+            ) : null}
 
             {/* FAQ */}
+            {coach.faqs.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Câu hỏi thường gặp</h2>
               <FaqAccordion items={coach.faqs} className="mt-4" />
               <FaqJsonLd items={coach.faqs} />
             </div>
+            ) : null}
           </div>
 
           <CoachBookingPanel coach={coach} />

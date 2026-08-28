@@ -12,8 +12,8 @@ const uploadSchema = z.object({
     .regex(/^data:image\/(png|jpe?g|webp|gif);base64,/i, 'Chỉ nhận ảnh PNG/JPG/WEBP/GIF.'),
 });
 
-// Giới hạn ~4MB sau khi giải mã base64 (client nên nén trước khi gửi).
-const MAX_BYTES = 4 * 1024 * 1024;
+// Giới hạn 1MB sau khi giải mã base64 (client đã nén xuống ~200KB trước khi gửi).
+const MAX_BYTES = 1 * 1024 * 1024;
 
 export async function POST(req: Request) {
   const session = await getAdminSession();
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Ảnh không hợp lệ.' }, { status: 400 });
   }
   if (data.length > MAX_BYTES) {
-    return NextResponse.json({ error: 'Ảnh quá lớn (tối đa 4MB). Vui lòng chọn ảnh nhỏ hơn.' }, { status: 413 });
+    return NextResponse.json({ error: 'Ảnh quá lớn (tối đa 1MB). Vui lòng chọn ảnh nhỏ hơn.' }, { status: 413 });
   }
 
   try {

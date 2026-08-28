@@ -1,13 +1,15 @@
 'use client';
 
-import { Check, EyeOff, Save, Search, Star } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Check, EyeOff, ImagePlus, Plus, Save, Search, Star, UserPlus, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, Input, Label, Switch, Textarea } from '@/components/ui/form-fields';
 import { formatCurrency } from '@/lib/format';
+import { uploadAdminImage } from '@/lib/image-upload';
 
 /** Trùng khớp CoachAdminRow ở coachService (khai báo lại để không import server-only). */
 export interface CoachRow {
@@ -15,15 +17,87 @@ export interface CoachRow {
   name: string;
   title: string;
   bio: string;
+  avatar: string;
   yearsExperience: number;
   pricePerSession: number;
   rating: number;
   featured: boolean;
   active: boolean;
+  custom: boolean;
+}
+
+const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
+
+/** Ô tải ảnh dùng chung: xem trước + nút tải, tự nén ảnh xuống < 200KB. */
+function AvatarUploader({
+  value,
+  onChange,
+  idPrefix,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+  idPrefix: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadAdminImage(file);
+      onChange(url);
+      toast.success('Đã tải ảnh');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Tải ảnh thất bại');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="relative size-20 shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)]">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="Ảnh HLV" className="size-full object-cover" />
+        ) : (
+          <span className="flex size-full items-center justify-center text-[var(--color-muted)]">
+            <ImagePlus className="size-6" aria-hidden />
+          </span>
+        )}
+      </div>
+      <div className="min-w-0">
+        <input
+          ref={inputRef}
+          id={`${idPrefix}-avatar`}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => void handleFile(e.target.files?.[0])}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          loading={uploading}
+          onClick={() => inputRef.current?.click()}
+        >
+          <ImagePlus aria-hidden />
+          {value ? 'Đổi ảnh' : 'Tải ảnh'}
+        </Button>
+        <p className="mt-1.5 text-xs text-[var(--color-muted)]">
+          Khuyến nghị dưới 200KB, tối đa 1MB. Ảnh lớn sẽ tự động được nén nhỏ lại.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function CoachManager({ coaches }: { coaches: CoachRow[] }) {
   const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -35,26 +109,180 @@ export function CoachManager({ coaches }: { coaches: CoachRow[] }) {
 
   return (
     <div className="space-y-6">
-      <Field label="Tìm huấn luyện viên" htmlFor="coach-search" className="max-w-md">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
-            aria-hidden
-          />
-          <Input
-            id="coach-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tên hoặc chức danh…"
-            className="pl-10"
-          />
-        </div>
-      </Field>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <Field label="Tìm huấn luyện viên" htmlFor="coach-search" className="max-w-md flex-1">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
+              aria-hidden
+            />
+            <Input
+              id="coach-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tên hoặc chức danh…"
+              className="pl-10"
+            />
+          </div>
+        </Field>
+        <Button variant="accent" onClick={() => setCreating((v) => !v)}>
+          {creating ? <X aria-hidden /> : <UserPlus aria-hidden />}
+          {creating ? 'Đóng' : 'Thêm HLV mới'}
+        </Button>
+      </div>
+
+      {creating ? <CreateCoachForm onDone={() => setCreating(false)} /> : null}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {filtered.map((coach) => (
           <CoachCard key={coach.slug} coach={coach} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CreateCoachForm({ onDone }: { onDone: () => void }) {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: '',
+    title: '',
+    bio: '',
+    avatar: '',
+    yearsExperience: 0,
+    pricePerSession: 0,
+    featured: false,
+    active: true,
+  });
+
+  const create = async () => {
+    if (!form.name.trim() || !form.title.trim()) {
+      toast.error('Vui lòng nhập tên và chức danh');
+      return;
+    }
+    setSaving(true);
+    const res = await fetch('/api/admin/coaches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name.trim(),
+        title: form.title.trim(),
+        bio: form.bio.trim(),
+        avatar: form.avatar,
+        yearsExperience: form.yearsExperience,
+        pricePerSession: form.pricePerSession,
+        featured: form.featured,
+        active: form.active,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      toast.error('Tạo chưa thành công', { description: body?.error });
+      return;
+    }
+    toast.success('Đã thêm huấn luyện viên', {
+      description: `HLV "${form.name}" đã được tạo và hiển thị trên trang /coaches.`,
+    });
+    onDone();
+    router.refresh();
+  };
+
+  return (
+    <div className="rounded-[var(--radius-lg)] border-2 border-[var(--color-accent)] bg-[var(--color-golf-50)] p-5">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-medium">
+        <Plus className="size-5 text-[var(--color-accent)]" aria-hidden />
+        Huấn luyện viên mới
+      </h3>
+
+      <div className="space-y-4">
+        <Field label="Ảnh huấn luyện viên" htmlFor="new-avatar">
+          <AvatarUploader
+            idPrefix="new"
+            value={form.avatar}
+            onChange={(url) => setForm({ ...form, avatar: url })}
+          />
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Tên huấn luyện viên" htmlFor="new-name" required>
+            <Input
+              id="new-name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Nguyễn Văn A"
+            />
+          </Field>
+          <Field label="Chức danh" htmlFor="new-title" required>
+            <Input
+              id="new-title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Senior Coach · Chuyên gia người mới"
+            />
+          </Field>
+        </div>
+
+        <Field label="Giới thiệu" htmlFor="new-bio">
+          <Textarea
+            id="new-bio"
+            rows={3}
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            placeholder="Vài dòng giới thiệu về huấn luyện viên…"
+          />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Số năm kinh nghiệm" htmlFor="new-yrs">
+            <Input
+              id="new-yrs"
+              type="number"
+              inputMode="numeric"
+              value={String(form.yearsExperience)}
+              onChange={(e) => setForm({ ...form, yearsExperience: num(e.target.value) })}
+            />
+          </Field>
+          <Field
+            label="Học phí / buổi (đ)"
+            htmlFor="new-price"
+            helper={form.pricePerSession > 0 ? formatCurrency(form.pricePerSession) : '—'}
+          >
+            <Input
+              id="new-price"
+              type="number"
+              inputMode="numeric"
+              value={String(form.pricePerSession)}
+              onChange={(e) => setForm({ ...form, pricePerSession: num(e.target.value) })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ToggleRow
+            id="new-active"
+            label="Hiển thị"
+            checked={form.active}
+            onChange={(v) => setForm({ ...form, active: v })}
+          />
+          <ToggleRow
+            id="new-featured"
+            label="Nổi bật"
+            checked={form.featured}
+            onChange={(v) => setForm({ ...form, featured: v })}
+          />
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-end gap-3 border-t border-[var(--color-golf-200)] pt-4">
+        <Button variant="ghost" onClick={onDone}>
+          Huỷ
+        </Button>
+        <Button variant="accent" onClick={create} loading={saving}>
+          <UserPlus aria-hidden />
+          Tạo huấn luyện viên
+        </Button>
       </div>
     </div>
   );
@@ -66,7 +294,6 @@ function CoachCard({ coach }: { coach: CoachRow }) {
   const [saving, setSaving] = useState(false);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(saved);
-  const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
   const save = async () => {
     setSaving(true);
@@ -78,6 +305,7 @@ function CoachCard({ coach }: { coach: CoachRow }) {
         name: form.name.trim(),
         title: form.title.trim(),
         bio: form.bio.trim(),
+        avatar: form.avatar,
         yearsExperience: form.yearsExperience,
         pricePerSession: form.pricePerSession,
         featured: form.featured,
@@ -110,6 +338,11 @@ function CoachCard({ coach }: { coach: CoachRow }) {
           {form.rating.toFixed(1)}
         </span>
         <div className="flex shrink-0 items-center gap-2">
+          {coach.custom ? (
+            <Badge variant="accent" size="sm">
+              Tự thêm
+            </Badge>
+          ) : null}
           {form.featured ? (
             <Badge variant="gold" size="sm">
               Nổi bật
@@ -125,6 +358,12 @@ function CoachCard({ coach }: { coach: CoachRow }) {
       </div>
 
       <div className="space-y-4">
+        <AvatarUploader
+          idPrefix={form.slug}
+          value={form.avatar}
+          onChange={(url) => setForm({ ...form, avatar: url })}
+        />
+
         <Field label="Tên huấn luyện viên" htmlFor={`name-${form.slug}`}>
           <Input
             id={`name-${form.slug}`}

@@ -14,7 +14,7 @@ export default async function AdminCoachesPage() {
     <div>
       <PortalHeader
         title="Huấn luyện viên"
-        description="Sửa tên, chức danh, giới thiệu, số năm kinh nghiệm, học phí và bật/tắt hiển thị từng HLV. Bấm Lưu là trang /coaches cập nhật ngay."
+        description="Thêm HLV mới, tải ảnh, sửa tên, chức danh, giới thiệu, số năm kinh nghiệm, học phí và bật/tắt hiển thị từng HLV. Bấm Lưu/Tạo là trang /coaches cập nhật ngay."
         action={
           <Button asChild variant="outline">
             <Link href="/coaches" target="_blank" rel="noopener noreferrer">
