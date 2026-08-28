@@ -243,6 +243,7 @@ export const ADMIN_NAV = [
   { label: 'Hội viên', href: '/admin/memberships' as Route, icon: 'Crown' },
   { label: 'Voucher', href: '/admin/vouchers' as Route, icon: 'Ticket' },
   { label: 'Sự kiện', href: '/admin/events' as Route, icon: 'Trophy' },
+  { label: 'Đăng ký SK', href: '/admin/event-registrations' as Route, icon: 'UserCheck' },
   { label: 'Huấn luyện viên', href: '/admin/coaches' as Route, icon: 'GraduationCap' },
   { label: 'Nội dung', href: '/admin/content' as Route, icon: 'BookOpen' },
   { label: 'Thư Viện', href: '/admin/posts' as Route, icon: 'Newspaper' },

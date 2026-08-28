@@ -48,6 +48,40 @@ async function ensureEvent(slug: string): Promise<{ id: string; fee: number; cap
   return created;
 }
 
+export interface AdminEventRegRow {
+  id: string;
+  eventTitle: string;
+  customerName: string;
+  customerPhone: string;
+  attendees: number;
+  fee: number;
+  status: string;
+  createdAt: string;
+}
+
+/** Danh sách tất cả đăng ký sự kiện cho Admin (mới nhất trước). */
+export async function listAllEventRegistrations(limit = 300): Promise<AdminEventRegRow[]> {
+  try {
+    const rows = await prisma.eventRegistration.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: { event: { select: { title: true } } },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      eventTitle: r.event.title,
+      customerName: r.contactName,
+      customerPhone: r.contactPhone ?? '',
+      attendees: r.attendees,
+      fee: r.fee,
+      status: r.status,
+      createdAt: r.createdAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export interface RegisterEventInput {
   slug: string;
   attendees: number;
