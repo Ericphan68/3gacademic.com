@@ -106,6 +106,8 @@ model Customer {
   emailVerified      Boolean   @default(true)
   emailVerifyToken   String?   @unique
   emailVerifyExpires DateTime?
+  passwordResetToken   String?   @unique
+  passwordResetExpires DateTime?
   status         CustomerStatus @default(NEW)
   golfLevel      GolfLevel  @default(NEVER)
   handedness     Handedness @default(RIGHT)
