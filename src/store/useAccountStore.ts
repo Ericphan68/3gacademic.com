@@ -52,6 +52,8 @@ interface AccountState {
   useVoucher: (code: string) => void;
   giftVoucher: (id: string, recipient: string) => void;
   setMembership: (record: MembershipRecord) => void;
+  /** Gộp buổi học THẬT từ server (ưu tiên server theo id). */
+  mergeServerLessons: (server: LessonRecord[]) => void;
   registerEvent: (registration: Omit<EventRegistration, 'id' | 'registeredAt' | 'qrPayload'>) => EventRegistration;
   addFnbOrder: (order: Omit<FnbOrder, 'id' | 'code' | 'createdAt' | 'status'>) => FnbOrder;
   toggleFavoriteCoach: (coachId: string) => void;
@@ -94,6 +96,7 @@ const EMPTY = {
   | 'useVoucher'
   | 'giftVoucher'
   | 'setMembership'
+  | 'mergeServerLessons'
   | 'registerEvent'
   | 'addFnbOrder'
   | 'toggleFavoriteCoach'
@@ -178,6 +181,13 @@ export const useAccountStore = create<AccountState>()(
         })),
 
       setMembership: (record) => set({ membership: record }),
+
+      mergeServerLessons: (server) =>
+        set((state) => {
+          const ids = new Set(server.map((l) => l.id));
+          const clientOnly = state.lessons.filter((l) => !ids.has(l.id));
+          return { lessons: [...server, ...clientOnly] };
+        }),
 
       registerEvent: (registration) => {
         const entry: EventRegistration = {

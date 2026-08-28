@@ -1,10 +1,12 @@
 import 'server-only';
 
+import { COACHES } from '@/data/coaches';
 import { prisma } from '@/server/db';
 import type {
   Booking,
   BookingExperienceType,
   BookingStatus as ClientBookingStatus,
+  LessonRecord,
   PaymentMethod,
   PaymentStatus,
   ZoneId,
@@ -126,7 +128,28 @@ export async function createBooking(
     let coachId: string | null = null;
     if (input.coachName) {
       const coach = await tx.coach.findFirst({ where: { name: input.coachName }, select: { id: true } });
-      coachId = coach?.id ?? null;
+      if (coach) {
+        coachId = coach.id;
+      } else {
+        // HLV chưa có trong DB → tạo từ dữ liệu tĩnh (lazy-upsert theo slug) để buổi
+        // học liên kết đúng HLV.
+        const base = COACHES.find((c) => c.name === input.coachName);
+        if (base) {
+          const created = await tx.coach.upsert({
+            where: { slug: base.slug },
+            update: {},
+            create: {
+              slug: base.slug,
+              name: base.name,
+              title: base.title,
+              bio: base.bio,
+              pricePerSession: base.pricePerSession,
+            },
+            select: { id: true },
+          });
+          coachId = created.id;
+        }
+      }
     }
     if (coachId) {
       const clash = await tx.booking.findFirst({
@@ -326,6 +349,37 @@ export async function listCustomerBookings(customerId: string): Promise<Booking[
         status: statusBack(b.status),
         createdAt: b.createdAt.toISOString(),
         qrPayload: b.qrPayload ?? `LOTUS|BOOKING|${b.code}`,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** Buổi học THẬT của khách = đơn đặt lịch có gắn HLV (từ DB). */
+export async function listCustomerLessons(customerId: string): Promise<LessonRecord[]> {
+  try {
+    const rows = await prisma.booking.findMany({
+      where: { customerId, coachId: { not: null } },
+      orderBy: { date: 'desc' },
+      take: 100,
+      include: { coach: { select: { name: true } } },
+    });
+    return rows.map((b): LessonRecord => {
+      // Ánh xạ về HLV tĩnh (theo tên) để giao diện lấy đúng avatar/hồ sơ.
+      const staticCoach = COACHES.find((c) => c.name === b.coach?.name);
+      return {
+        id: b.id,
+        coachId: staticCoach?.id ?? b.coachId ?? '',
+        coachName: staticCoach?.name ?? b.coach?.name ?? 'Huấn luyện viên',
+        programName: b.experienceLabel,
+        date: b.date.toISOString().slice(0, 10),
+        time: b.time,
+        status: b.status === 'COMPLETED' ? 'completed' : b.status === 'CANCELLED' || b.status === 'NO_SHOW' ? 'cancelled' : 'scheduled',
+        focus: '',
+        coachNote: '',
+        homework: '',
+        progressScore: 0,
       };
     });
   } catch {
