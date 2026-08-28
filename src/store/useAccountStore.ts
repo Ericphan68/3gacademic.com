@@ -47,6 +47,8 @@ interface AccountState {
   markBookingPaid: (id: string) => void;
   addTransaction: (tx: Omit<WalletTransaction, 'id' | 'createdAt'>) => void;
   addVoucher: (voucher: Omit<OwnedVoucher, 'id' | 'acquiredAt'>) => void;
+  /** Gộp voucher THẬT từ server (ưu tiên server, giữ voucher client theo mã). */
+  mergeServerVouchers: (server: OwnedVoucher[]) => void;
   useVoucher: (code: string) => void;
   giftVoucher: (id: string, recipient: string) => void;
   setMembership: (record: MembershipRecord) => void;
@@ -88,6 +90,7 @@ const EMPTY = {
   | 'markBookingPaid'
   | 'addTransaction'
   | 'addVoucher'
+  | 'mergeServerVouchers'
   | 'useVoucher'
   | 'giftVoucher'
   | 'setMembership'
@@ -150,6 +153,13 @@ export const useAccountStore = create<AccountState>()(
             ...state.vouchers,
           ],
         })),
+
+      mergeServerVouchers: (server) =>
+        set((state) => {
+          const codes = new Set(server.map((v) => v.code));
+          const clientOnly = state.vouchers.filter((v) => !codes.has(v.code));
+          return { vouchers: [...server, ...clientOnly] };
+        }),
 
       useVoucher: (code) =>
         set((state) => ({

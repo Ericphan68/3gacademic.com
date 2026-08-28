@@ -8,6 +8,8 @@ import { VoucherExplorer } from '@/features/vouchers/voucher-explorer';
 import { buildMetadata } from '@/lib/seo';
 import { getManagedVouchers } from '@/server/services/voucherService';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = buildMetadata({
   title: 'Voucher và ưu đãi',
   description:

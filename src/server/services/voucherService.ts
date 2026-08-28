@@ -50,9 +50,10 @@ export interface VoucherAdminRow {
 
 const toDateInput = (d: Date): string => d.toISOString().slice(0, 10);
 
-/** Ghép 1 voucher mock với bản ghi DB (nếu có). */
-function mergeVoucher(base: Voucher, row: DbVoucherRow | undefined): Voucher {
-  if (!row) return base;
+/** Ghép 1 voucher mock với bản ghi DB (nếu có), số đã bán tính THẬT từ redemption. */
+function mergeVoucher(base: Voucher, row: DbVoucherRow | undefined, sold?: number): Voucher {
+  const soldQuantity = typeof sold === 'number' ? Math.min(sold, base.totalQuantity) : base.soldQuantity;
+  if (!row) return { ...base, soldQuantity };
   return {
     ...base,
     name: row.name,
@@ -63,10 +64,12 @@ function mergeVoucher(base: Voucher, row: DbVoucherRow | undefined): Voucher {
     expiresAt: row.endAt ? toDateInput(row.endAt) : base.expiresAt,
     memberOnly: row.memberOnly,
     hot: row.isFeatured,
+    soldQuantity,
   };
 }
 
 interface DbVoucherRow {
+  id: string;
   code: string;
   name: string;
   description: string | null;
@@ -83,6 +86,7 @@ async function loadRows(): Promise<Map<string, DbVoucherRow>> {
   const rows = await prisma.voucher.findMany({
     where: { deletedAt: null },
     select: {
+      id: true,
       code: true,
       name: true,
       description: true,
@@ -98,13 +102,23 @@ async function loadRows(): Promise<Map<string, DbVoucherRow>> {
   return new Map(rows.map((r) => [r.code, r]));
 }
 
-/** Danh sách voucher hiển thị cho public (ẩn voucher đã tắt). */
+/** Số lượt đã mua/đổi theo voucherId (kho thật). */
+async function soldCounts(): Promise<Map<string, number>> {
+  const grouped = await prisma.voucherRedemption.groupBy({ by: ['voucherId'], _count: { _all: true } });
+  return new Map(grouped.map((g) => [g.voucherId, g._count._all]));
+}
+
+/** Danh sách voucher hiển thị cho public (ẩn voucher đã tắt), số đã bán là THẬT. */
 export async function getManagedVouchers(): Promise<Voucher[]> {
   try {
-    const byCode = await loadRows();
+    const [byCode, counts] = await Promise.all([loadRows(), soldCounts()]);
     if (byCode.size === 0) return VOUCHERS;
 
-    return VOUCHERS.map((v) => mergeVoucher(v, byCode.get(v.code))).filter((v) => {
+    return VOUCHERS.map((v) => {
+      const row = byCode.get(v.code);
+      const sold = row ? (counts.get(row.id) ?? 0) : undefined;
+      return mergeVoucher(v, row, sold);
+    }).filter((v) => {
       const row = byCode.get(v.code);
       // Có bản ghi DB và không ở trạng thái ACTIVE → ẩn khỏi website.
       return row ? row.status === 'ACTIVE' : true;

@@ -12,7 +12,6 @@ import { VOUCHER_CATEGORY_LABELS } from '@/data/vouchers';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { spendWalletServer } from '@/lib/wallet-client';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Voucher } from '@/types';
@@ -53,29 +52,51 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
       return;
     }
 
-    if (mode === 'buy' && voucher.price > 0) {
-      if (user.walletBalance < voucher.price) {
-        toast.error('Số dư ví không đủ', {
-          description: `Bạn cần thêm ${formatCurrency(voucher.price - user.walletBalance)}. Hãy nạp ví trước.`,
-        });
-        return;
-      }
-      try {
-        const nextBalance = await spendWalletServer(voucher.price, `Mua voucher ${voucher.name}`, voucher.code);
-        setWalletBalance(nextBalance);
-        addTransaction({
-          type: 'voucher-purchase',
-          label: `Mua voucher ${voucher.name}`,
-          amount: -voucher.price,
-          balanceAfter: nextBalance,
-          reference: voucher.code,
-        });
-      } catch (e) {
-        toast.error('Mua voucher chưa thành công', { description: e instanceof Error ? e.message : undefined });
-        return;
-      }
+    // Tặng: giữ nguyên luồng demo phía client (chưa lưu DB).
+    if (mode === 'gift') {
+      addVoucher({
+        voucherId: voucher.id,
+        code: voucher.code,
+        name: voucher.name,
+        category: voucher.category,
+        faceValue: voucher.faceValue,
+        discountLabel,
+        expiresAt: voucher.expiresAt,
+        status: 'active',
+      });
+      toast.success('Đã thêm voucher quà tặng', {
+        description: 'Vào Dashboard → Voucher để chuyển tặng cho người khác (tính năng demo).',
+      });
+      return;
     }
 
+    // Mua/nhận: lưu THẬT ở server (trừ kho + trừ ví nếu có phí + chống trùng).
+    if (mode === 'buy' && voucher.price > 0 && user.walletBalance < voucher.price) {
+      toast.error('Số dư ví không đủ', {
+        description: `Bạn cần thêm ${formatCurrency(voucher.price - user.walletBalance)}. Hãy nạp ví trước.`,
+      });
+      return;
+    }
+    const res = await fetch('/api/vouchers/buy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: voucher.code }),
+    });
+    const body = (await res.json().catch(() => null)) as { balance?: number; error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa nhận được voucher', { description: body?.error });
+      return;
+    }
+    if (typeof body?.balance === 'number') {
+      setWalletBalance(body.balance);
+      addTransaction({
+        type: 'voucher-purchase',
+        label: `Mua voucher ${voucher.name}`,
+        amount: -voucher.price,
+        balanceAfter: body.balance,
+        reference: voucher.code,
+      });
+    }
     addVoucher({
       voucherId: voucher.id,
       code: voucher.code,
@@ -86,16 +107,9 @@ export function VoucherCard({ voucher, className }: { voucher: Voucher; classNam
       expiresAt: voucher.expiresAt,
       status: 'active',
     });
-
-    toast.success(
-      mode === 'gift' ? 'Đã thêm voucher quà tặng' : mode === 'save' ? 'Đã lưu voucher' : 'Mua voucher thành công',
-      {
-        description:
-          mode === 'gift'
-            ? 'Vào Dashboard → Voucher để chuyển tặng cho người khác (tính năng demo).'
-            : 'Voucher đã xuất hiện trong Dashboard → Voucher của bạn.',
-      },
-    );
+    toast.success(mode === 'save' ? 'Đã lưu voucher' : 'Mua voucher thành công', {
+      description: 'Voucher đã xuất hiện trong Dashboard → Voucher của bạn.',
+    });
   };
 
   return (
