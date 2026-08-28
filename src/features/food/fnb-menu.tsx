@@ -16,7 +16,6 @@ import { FNB_CATEGORY_LABELS, FNB_CATEGORY_ORDER } from '@/data/fnb';
 import { useHydrated } from '@/hooks/useHydrated';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { spendWalletServer } from '@/lib/wallet-client';
 import { fnbService } from '@/services/catalogService';
 import { useAccountStore } from '@/store/useAccountStore';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -224,25 +223,32 @@ export function FnbCart() {
   const checkout = async () => {
     if (lines.length === 0) return;
 
-    // Nếu đủ số dư → trừ ví THẬT ở server trước khi tạo đơn; nếu không → trả tại quầy.
     const payByWallet = Boolean(user && total > 0 && user.walletBalance >= total);
-    let nextBalance: number | null = null;
-    if (payByWallet) {
-      try {
-        nextBalance = await spendWalletServer(total, 'Đơn F&B Lotus');
-      } catch (e) {
-        toast.error('Thanh toán ví chưa thành công', { description: e instanceof Error ? e.message : undefined });
-        return;
-      }
-    }
 
-    const order = addFnbOrder({
-      items: lines.map((line) => ({
-        id: line.id,
-        name: line.name,
-        quantity: line.quantity,
-        price: line.price,
-      })),
+    // Lưu đơn THẬT ở server (bếp nhận) + trừ ví thật nếu trả ví.
+    const res = await fetch('/api/fnb/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: lines.map((line) => ({ name: line.name, quantity: line.quantity, price: line.price })),
+        total,
+        deliveryTarget,
+        bayNumber: deliveryTarget === 'bay' ? bayNumber : null,
+        scheduledTime: scheduledTime || TIME_OPTIONS[0],
+        note,
+        payByWallet,
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as { code?: string; balance?: number; error?: string } | null;
+    if (!res.ok) {
+      toast.error('Chưa đặt được món', { description: body?.error });
+      return;
+    }
+    const orderCode = body?.code ?? '';
+
+    // Ghi vào store client để dashboard hiển thị ngay.
+    addFnbOrder({
+      items: lines.map((line) => ({ id: line.id, name: line.name, quantity: line.quantity, price: line.price })),
       total,
       deliveryTarget,
       bayNumber: deliveryTarget === 'bay' ? bayNumber : undefined,
@@ -250,21 +256,21 @@ export function FnbCart() {
       note,
     });
 
-    if (nextBalance !== null) {
-      setWalletBalance(nextBalance);
+    if (typeof body?.balance === 'number') {
+      setWalletBalance(body.balance);
       addTransaction({
         type: 'payment',
-        label: `Đơn F&B · ${order.code}`,
+        label: `Đơn F&B · ${orderCode}`,
         amount: -total,
-        balanceAfter: nextBalance,
-        reference: order.code,
+        balanceAfter: body.balance,
+        reference: orderCode,
       });
     }
 
     clear();
-    setDone(order.code);
+    setDone(orderCode);
     toast.success('Đã đặt món thành công', {
-      description: `Mã đơn ${order.code}. Xem lại trong tài khoản của bạn.`,
+      description: `Mã đơn ${orderCode}. Lotus sẽ chuẩn bị món cho bạn.`,
     });
   };
 
