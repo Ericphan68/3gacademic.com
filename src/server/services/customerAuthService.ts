@@ -1,8 +1,21 @@
 import 'server-only';
 
+import { randomBytes } from 'crypto';
+
+import { addHours } from 'date-fns';
+
 import { hashPassword, verifyPassword } from '@/server/auth/password';
+import { isEmailConfigured } from '@/server/email/brevo';
 import { prisma } from '@/server/db';
 import type { User, UserPreferences } from '@/types/account';
+
+/** Token xác nhận email (ngẫu nhiên, an toàn). */
+export function newVerifyToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+/** Lỗi email chưa xác nhận (client dùng code này để mời gửi lại). */
+export const EMAIL_UNVERIFIED = 'EMAIL_UNVERIFIED';
 
 /**
  * Tài khoản KHÁCH HÀNG thật (lưu DB). Mật khẩu luôn băm bằng bcrypt.
@@ -85,7 +98,9 @@ export interface RegisterCustomerInput {
 }
 
 /** Đăng ký khách mới. Ném AuthError nếu email/SĐT đã tồn tại. */
-export async function registerCustomer(input: RegisterCustomerInput): Promise<User> {
+export async function registerCustomer(
+  input: RegisterCustomerInput,
+): Promise<{ user: User; verifyToken: string | null }> {
   const email = input.email.trim().toLowerCase();
   const phone = input.phone.trim();
   const fullName = input.fullName.trim();
@@ -99,6 +114,11 @@ export async function registerCustomer(input: RegisterCustomerInput): Promise<Us
     throw new AuthError('Số điện thoại này đã được đăng ký.', 409);
   }
 
+  // Chỉ yêu cầu xác nhận email khi đã cấu hình dịch vụ gửi email (Brevo).
+  // Chưa cấu hình -> tự động xác nhận (không khoá khách).
+  const requireVerify = isEmailConfigured();
+  const verifyToken = requireVerify ? newVerifyToken() : null;
+
   const passwordHash = await hashPassword(input.password);
   const created = await prisma.customer.create({
     data: {
@@ -109,10 +129,13 @@ export async function registerCustomer(input: RegisterCustomerInput): Promise<Us
       passwordHash,
       passwordUpdatedAt: new Date(),
       status: 'NEW',
+      emailVerified: !requireVerify,
+      emailVerifyToken: verifyToken,
+      emailVerifyExpires: requireVerify ? addHours(new Date(), 24) : null,
     },
     select: SELECT,
   });
-  return toUser(created);
+  return { user: toUser(created), verifyToken };
 }
 
 /** Đăng nhập bằng email hoặc SĐT + mật khẩu. Ném AuthError nếu sai. */
@@ -121,7 +144,7 @@ export async function loginCustomer(identifier: string, password: string): Promi
   const isEmail = id.includes('@');
   const customer = await prisma.customer.findFirst({
     where: isEmail ? { email: id } : { phone: identifier.trim() },
-    select: { ...SELECT, passwordHash: true, deletedAt: true },
+    select: { ...SELECT, passwordHash: true, deletedAt: true, emailVerified: true },
   });
 
   const fail = () => new AuthError('Email/SĐT hoặc mật khẩu chưa đúng.', 401);
@@ -129,6 +152,10 @@ export async function loginCustomer(identifier: string, password: string): Promi
 
   const ok = await verifyPassword(password, customer.passwordHash);
   if (!ok) throw fail();
+
+  if (!customer.emailVerified) {
+    throw new AuthError(EMAIL_UNVERIFIED, 403);
+  }
 
   await prisma.customer.update({ where: { id: customer.id }, data: { lastVisitAt: new Date() } }).catch(() => {});
   return toUser(customer);

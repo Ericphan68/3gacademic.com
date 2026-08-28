@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Check, Eye, EyeOff, MailCheck, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -43,6 +43,7 @@ export function RegisterForm() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const [showPassword, setShowPassword] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const {
     register,
@@ -68,17 +69,66 @@ export function RegisterForm() {
         password: values.password,
       }),
     });
-    const body = (await res.json().catch(() => null)) as { user?: unknown; error?: string } | null;
+    const body = (await res.json().catch(() => null)) as
+      | { user?: unknown; pendingVerification?: boolean; email?: string; error?: string }
+      | null;
 
-    if (!res.ok || !body?.user) {
+    if (!res.ok) {
       toast.error('Chưa tạo được tài khoản', { description: body?.error });
       return;
     }
 
+    // Cần xác nhận email: hiện màn "kiểm tra email", chưa đăng nhập.
+    if (body?.pendingVerification) {
+      setPendingEmail(body.email ?? values.email);
+      return;
+    }
+
+    if (!body?.user) {
+      toast.error('Chưa tạo được tài khoản');
+      return;
+    }
     setUser(body.user as Parameters<typeof setUser>[0]);
     toast.success('Tạo tài khoản thành công', { description: 'Chào mừng bạn đến với Lotus Golf Center.' });
     router.push('/dashboard');
   };
+
+  const resend = async () => {
+    if (!pendingEmail) return;
+    await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: pendingEmail }),
+    }).catch(() => {});
+    toast.success('Đã gửi lại email xác nhận');
+  };
+
+  if (pendingEmail) {
+    return (
+      <div className="text-center">
+        <span className="mx-auto mb-5 flex size-16 items-center justify-center rounded-full bg-[var(--color-golf-100)] text-[var(--color-accent)]">
+          <MailCheck className="size-8" aria-hidden />
+        </span>
+        <h1 className="text-3xl">Kiểm tra email của bạn</h1>
+        <p className="mt-3 text-[var(--color-muted)]">
+          Lotus đã gửi email xác nhận tới{' '}
+          <span className="font-medium text-[var(--color-foreground)]">{pendingEmail}</span>. Mở email và bấm
+          nút xác nhận để kích hoạt tài khoản, rồi đăng nhập.
+        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          <Button asChild variant="accent" block>
+            <Link href="/login">Tới trang đăng nhập</Link>
+          </Button>
+          <Button variant="ghost" block onClick={resend}>
+            Không nhận được email? Gửi lại
+          </Button>
+        </div>
+        <p className="mt-6 text-xs text-[var(--color-muted)]">
+          Nhớ kiểm tra cả hộp thư rác (Spam) nếu không thấy email sau vài phút.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -103,6 +103,9 @@ model Customer {
   avatarInitials String?
   passwordHash      String?
   passwordUpdatedAt DateTime?
+  emailVerified      Boolean   @default(true)
+  emailVerifyToken   String?   @unique
+  emailVerifyExpires DateTime?
   status         CustomerStatus @default(NEW)
   golfLevel      GolfLevel  @default(NEVER)
   handedness     Handedness @default(RIGHT)
