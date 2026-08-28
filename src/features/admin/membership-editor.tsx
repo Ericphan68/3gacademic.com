@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Save } from 'lucide-react';
+import { Check, EyeOff, Save } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -19,6 +19,7 @@ export interface MembershipRow {
   coachDiscountPercent: number;
   fnbDiscountPercent: number;
   isFeatured: boolean;
+  isActive: boolean;
 }
 
 export function MembershipEditor({ plans }: { plans: MembershipRow[] }) {
@@ -55,6 +56,7 @@ function PlanCard({ plan }: { plan: MembershipRow }) {
         coachDiscountPercent: form.coachDiscountPercent,
         fnbDiscountPercent: form.fnbDiscountPercent,
         isFeatured: form.isFeatured,
+        isActive: form.isActive,
       }),
     });
     setSaving(false);
@@ -70,7 +72,13 @@ function PlanCard({ plan }: { plan: MembershipRow }) {
   };
 
   return (
-    <div className="flex flex-col rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5">
+    <div
+      className={`flex flex-col rounded-[var(--radius-lg)] border p-5 ${
+        form.isActive
+          ? 'border-[var(--color-border)] bg-[var(--color-surface-raised)]'
+          : 'border-dashed border-[var(--color-border-strong)] bg-[var(--color-surface)]'
+      }`}
+    >
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <p className="text-xs tracking-widest text-[var(--color-muted)] uppercase">{form.key}</p>
@@ -78,11 +86,19 @@ function PlanCard({ plan }: { plan: MembershipRow }) {
             {formatCurrency(form.price)}
           </p>
         </div>
-        {form.isFeatured ? (
-          <Badge variant="gold" size="sm">
-            Nổi bật
-          </Badge>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-2">
+          {form.isFeatured ? (
+            <Badge variant="gold" size="sm">
+              Nổi bật
+            </Badge>
+          ) : null}
+          {!form.isActive ? (
+            <Badge variant="neutral" size="sm">
+              <EyeOff className="size-3" aria-hidden />
+              Đang ẩn
+            </Badge>
+          ) : null}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -151,15 +167,27 @@ function PlanCard({ plan }: { plan: MembershipRow }) {
           </Field>
         </div>
 
-        <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
-          <Label htmlFor={`featured-${plan.key}`} className="font-normal">
-            Đánh dấu gói nổi bật
-          </Label>
-          <Switch
-            id={`featured-${plan.key}`}
-            checked={form.isFeatured}
-            onCheckedChange={(checked) => setForm({ ...form, isFeatured: checked })}
-          />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
+            <Label htmlFor={`active-${plan.key}`} className="font-normal">
+              Hiển thị gói
+            </Label>
+            <Switch
+              id={`active-${plan.key}`}
+              checked={form.isActive}
+              onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
+            <Label htmlFor={`featured-${plan.key}`} className="font-normal">
+              Gói nổi bật
+            </Label>
+            <Switch
+              id={`featured-${plan.key}`}
+              checked={form.isFeatured}
+              onCheckedChange={(checked) => setForm({ ...form, isFeatured: checked })}
+            />
+          </div>
         </div>
       </div>
 

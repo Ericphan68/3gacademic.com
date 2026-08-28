@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, EyeOff, Save, Search } from 'lucide-react';
+import { Check, EyeOff, Plus, Save, Search, TicketPlus, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ export interface VoucherRow {
 
 export function VoucherManager({ vouchers }: { vouchers: VoucherRow[] }) {
   const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,26 +42,235 @@ export function VoucherManager({ vouchers }: { vouchers: VoucherRow[] }) {
 
   return (
     <div className="space-y-6">
-      <Field label="Tìm voucher" htmlFor="voucher-search" className="max-w-md">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
-            aria-hidden
-          />
-          <Input
-            id="voucher-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tên hoặc mã voucher…"
-            className="pl-10"
-          />
-        </div>
-      </Field>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <Field label="Tìm voucher" htmlFor="voucher-search" className="max-w-md flex-1">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
+              aria-hidden
+            />
+            <Input
+              id="voucher-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tên hoặc mã voucher…"
+              className="pl-10"
+            />
+          </div>
+        </Field>
+        <Button variant="accent" onClick={() => setCreating((v) => !v)}>
+          {creating ? <X aria-hidden /> : <TicketPlus aria-hidden />}
+          {creating ? 'Đóng' : 'Thêm voucher'}
+        </Button>
+      </div>
+
+      {creating ? <CreateVoucherForm onDone={() => setCreating(false)} /> : null}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {filtered.map((voucher) => (
           <VoucherCard key={voucher.code} voucher={voucher} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CreateVoucherForm({ onDone }: { onDone: () => void }) {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    code: '',
+    name: '',
+    description: '',
+    discountType: 'percent' as 'percent' | 'amount',
+    discountValue: 0,
+    minOrder: 0,
+    maxDiscount: 0,
+    totalQuantity: 100,
+    expiresAt: '',
+    memberOnly: false,
+    hot: false,
+    visible: true,
+  });
+  const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
+  const unit = form.discountType === 'percent' ? '%' : 'đ';
+
+  const create = async () => {
+    if (!form.code.trim() || !form.name.trim()) {
+      toast.error('Vui lòng nhập mã và tên voucher');
+      return;
+    }
+    setSaving(true);
+    const res = await fetch('/api/admin/vouchers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: form.code.trim().toUpperCase(),
+        name: form.name.trim(),
+        description: form.description.trim(),
+        discountType: form.discountType,
+        discountValue: form.discountValue,
+        minOrder: form.minOrder,
+        maxDiscount: form.discountType === 'amount' ? null : form.maxDiscount || null,
+        totalQuantity: form.totalQuantity,
+        expiresAt: form.expiresAt,
+        memberOnly: form.memberOnly,
+        hot: form.hot,
+        visible: form.visible,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      toast.error('Tạo chưa thành công', { description: body?.error });
+      return;
+    }
+    toast.success('Đã thêm voucher', {
+      description: `Voucher "${form.name}" đã tạo và hiển thị trên trang /vouchers.`,
+    });
+    onDone();
+    router.refresh();
+  };
+
+  return (
+    <div className="rounded-[var(--radius-lg)] border-2 border-[var(--color-accent)] bg-[var(--color-golf-50)] p-5">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-medium">
+        <Plus className="size-5 text-[var(--color-accent)]" aria-hidden />
+        Voucher mới
+      </h3>
+
+      <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Mã voucher" htmlFor="nv-code" required>
+            <Input
+              id="nv-code"
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+              placeholder="VD: HE2026"
+              className="font-mono uppercase"
+            />
+          </Field>
+          <Field label="Tên voucher" htmlFor="nv-name" required>
+            <Input
+              id="nv-name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Giảm 10% mùa hè"
+            />
+          </Field>
+        </div>
+
+        <Field label="Mô tả" htmlFor="nv-desc">
+          <Textarea
+            id="nv-desc"
+            rows={2}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Loại giảm" htmlFor="nv-type">
+            <select
+              id="nv-type"
+              value={form.discountType}
+              onChange={(e) => setForm({ ...form, discountType: e.target.value as 'percent' | 'amount' })}
+              className="h-11 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
+            >
+              <option value="percent">Theo % (phần trăm)</option>
+              <option value="amount">Theo số tiền (đ)</option>
+            </select>
+          </Field>
+          <Field label={`Giá trị giảm (${unit})`} htmlFor="nv-val">
+            <Input
+              id="nv-val"
+              type="number"
+              inputMode="numeric"
+              value={String(form.discountValue)}
+              onChange={(e) => setForm({ ...form, discountValue: num(e.target.value) })}
+            />
+          </Field>
+          <Field label="Số lượng phát hành" htmlFor="nv-qty">
+            <Input
+              id="nv-qty"
+              type="number"
+              inputMode="numeric"
+              value={String(form.totalQuantity)}
+              onChange={(e) => setForm({ ...form, totalQuantity: num(e.target.value) })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Đơn tối thiểu (đ)"
+            htmlFor="nv-min"
+            helper={form.minOrder > 0 ? formatCurrency(form.minOrder) : 'Không yêu cầu'}
+          >
+            <Input
+              id="nv-min"
+              type="number"
+              inputMode="numeric"
+              value={String(form.minOrder)}
+              onChange={(e) => setForm({ ...form, minOrder: num(e.target.value) })}
+            />
+          </Field>
+          <Field label="Hạn dùng đến" htmlFor="nv-exp">
+            <Input
+              id="nv-exp"
+              type="date"
+              value={form.expiresAt}
+              onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        {form.discountType === 'percent' ? (
+          <Field
+            label="Giảm tối đa (đ) — không bắt buộc"
+            htmlFor="nv-max"
+            helper={form.maxDiscount > 0 ? formatCurrency(form.maxDiscount) : 'Không giới hạn'}
+          >
+            <Input
+              id="nv-max"
+              type="number"
+              inputMode="numeric"
+              value={String(form.maxDiscount)}
+              onChange={(e) => setForm({ ...form, maxDiscount: num(e.target.value) })}
+            />
+          </Field>
+        ) : null}
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ToggleRow
+            id="nv-vis"
+            label="Hiển thị"
+            checked={form.visible}
+            onChange={(v) => setForm({ ...form, visible: v })}
+          />
+          <ToggleRow
+            id="nv-hot"
+            label="Đang hot"
+            checked={form.hot}
+            onChange={(v) => setForm({ ...form, hot: v })}
+          />
+          <ToggleRow
+            id="nv-mem"
+            label="Hội viên"
+            checked={form.memberOnly}
+            onChange={(v) => setForm({ ...form, memberOnly: v })}
+          />
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-end gap-3 border-t border-[var(--color-golf-200)] pt-4">
+        <Button variant="ghost" onClick={onDone}>
+          Huỷ
+        </Button>
+        <Button variant="accent" onClick={create} loading={saving}>
+          <TicketPlus aria-hidden />
+          Tạo voucher
+        </Button>
       </div>
     </div>
   );

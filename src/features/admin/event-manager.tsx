@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, EyeOff, Save, Search } from 'lucide-react';
+import { CalendarPlus, Check, EyeOff, Plus, Save, Search, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ export interface EventRow {
 
 export function EventManager({ events }: { events: EventRow[] }) {
   const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -36,26 +38,185 @@ export function EventManager({ events }: { events: EventRow[] }) {
 
   return (
     <div className="space-y-6">
-      <Field label="Tìm sự kiện" htmlFor="event-search" className="max-w-md">
-        <div className="relative">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
-            aria-hidden
-          />
-          <Input
-            id="event-search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tên hoặc địa điểm…"
-            className="pl-10"
-          />
-        </div>
-      </Field>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <Field label="Tìm sự kiện" htmlFor="event-search" className="max-w-md flex-1">
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-[var(--color-muted)]"
+              aria-hidden
+            />
+            <Input
+              id="event-search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Tên hoặc địa điểm…"
+              className="pl-10"
+            />
+          </div>
+        </Field>
+        <Button variant="accent" onClick={() => setCreating((v) => !v)}>
+          {creating ? <X aria-hidden /> : <CalendarPlus aria-hidden />}
+          {creating ? 'Đóng' : 'Thêm sự kiện'}
+        </Button>
+      </div>
+
+      {creating ? <CreateEventForm onDone={() => setCreating(false)} /> : null}
 
       <div className="grid gap-5 lg:grid-cols-2">
         {filtered.map((event) => (
           <EventCard key={event.slug} event={event} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CreateEventForm({ onDone }: { onDone: () => void }) {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    title: '',
+    summary: '',
+    location: '',
+    fee: 0,
+    capacity: 0,
+    startsAtLocal: '',
+    featured: false,
+    published: true,
+  });
+  const num = (v: string) => Math.max(0, Math.round(Number(v) || 0));
+
+  const create = async () => {
+    if (!form.title.trim()) {
+      toast.error('Vui lòng nhập tên sự kiện');
+      return;
+    }
+    if (!form.startsAtLocal) {
+      toast.error('Vui lòng chọn thời gian bắt đầu');
+      return;
+    }
+    setSaving(true);
+    const res = await fetch('/api/admin/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: form.title.trim(),
+        summary: form.summary.trim(),
+        location: form.location.trim(),
+        fee: form.fee,
+        capacity: form.capacity,
+        startsAtLocal: form.startsAtLocal,
+        featured: form.featured,
+        published: form.published,
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null;
+      toast.error('Tạo chưa thành công', { description: body?.error });
+      return;
+    }
+    toast.success('Đã thêm sự kiện', {
+      description: `Sự kiện "${form.title}" đã tạo và hiển thị trên trang /events.`,
+    });
+    onDone();
+    router.refresh();
+  };
+
+  return (
+    <div className="rounded-[var(--radius-lg)] border-2 border-[var(--color-accent)] bg-[var(--color-golf-50)] p-5">
+      <h3 className="mb-4 flex items-center gap-2 text-lg font-medium">
+        <Plus className="size-5 text-[var(--color-accent)]" aria-hidden />
+        Sự kiện mới
+      </h3>
+
+      <div className="space-y-4">
+        <Field label="Tên sự kiện" htmlFor="ne-title" required>
+          <Input
+            id="ne-title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Giải giao hữu mùa hè 2026"
+          />
+        </Field>
+
+        <Field label="Mô tả ngắn" htmlFor="ne-summary">
+          <Textarea
+            id="ne-summary"
+            rows={2}
+            value={form.summary}
+            onChange={(e) => setForm({ ...form, summary: e.target.value })}
+          />
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Địa điểm" htmlFor="ne-loc">
+            <Input
+              id="ne-loc"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              placeholder="Lotus Golf Center"
+            />
+          </Field>
+          <Field label="Thời gian bắt đầu" htmlFor="ne-start" required>
+            <Input
+              id="ne-start"
+              type="datetime-local"
+              value={form.startsAtLocal}
+              onChange={(e) => setForm({ ...form, startsAtLocal: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field
+            label="Phí tham gia (đ)"
+            htmlFor="ne-fee"
+            helper={form.fee > 0 ? formatCurrency(form.fee) : 'Miễn phí'}
+          >
+            <Input
+              id="ne-fee"
+              type="number"
+              inputMode="numeric"
+              value={String(form.fee)}
+              onChange={(e) => setForm({ ...form, fee: num(e.target.value) })}
+            />
+          </Field>
+          <Field label="Số chỗ (sức chứa)" htmlFor="ne-cap">
+            <Input
+              id="ne-cap"
+              type="number"
+              inputMode="numeric"
+              value={String(form.capacity)}
+              onChange={(e) => setForm({ ...form, capacity: num(e.target.value) })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ToggleRow
+            id="ne-pub"
+            label="Hiển thị"
+            checked={form.published}
+            onChange={(v) => setForm({ ...form, published: v })}
+          />
+          <ToggleRow
+            id="ne-feat"
+            label="Nổi bật"
+            checked={form.featured}
+            onChange={(v) => setForm({ ...form, featured: v })}
+          />
+        </div>
+      </div>
+
+      <div className="mt-5 flex items-center justify-end gap-3 border-t border-[var(--color-golf-200)] pt-4">
+        <Button variant="ghost" onClick={onDone}>
+          Huỷ
+        </Button>
+        <Button variant="accent" onClick={create} loading={saving}>
+          <CalendarPlus aria-hidden />
+          Tạo sự kiện
+        </Button>
       </div>
     </div>
   );

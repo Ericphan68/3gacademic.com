@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { voucherImage } from '@/constants/media';
 import { VOUCHERS } from '@/data/vouchers';
 import { prisma } from '@/server/db';
 import type { Voucher } from '@/types';
@@ -75,9 +76,11 @@ interface DbVoucherRow {
   code: string;
   name: string;
   description: string | null;
+  discountType: string;
   discountValue: number;
   minOrder: number;
   maxDiscount: number | null;
+  totalQuantity: number;
   endAt: Date | null;
   memberOnly: boolean;
   isFeatured: boolean;
@@ -92,9 +95,11 @@ async function loadRows(): Promise<Map<string, DbVoucherRow>> {
       code: true,
       name: true,
       description: true,
+      discountType: true,
       discountValue: true,
       minOrder: true,
       maxDiscount: true,
+      totalQuantity: true,
       endAt: true,
       memberOnly: true,
       isFeatured: true,
@@ -102,6 +107,33 @@ async function loadRows(): Promise<Map<string, DbVoucherRow>> {
     },
   });
   return new Map(rows.map((r) => [r.code, r]));
+}
+
+const MOCK_CODES = new Set(VOUCHERS.map((v) => v.code));
+
+/** Dựng 1 Voucher hoàn chỉnh cho voucher do admin tạo (chỉ có trong DB). */
+function dbRowToVoucher(row: DbVoucherRow, sold: number): Voucher {
+  const discountType: Voucher['discountType'] = row.discountType === 'AMOUNT' ? 'amount' : 'percent';
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    description: row.description ?? '',
+    category: 'gift',
+    price: 0,
+    faceValue: row.discountValue,
+    discountType,
+    discountValue: row.discountValue,
+    maxDiscount: row.maxDiscount ?? undefined,
+    minOrder: row.minOrder,
+    expiresAt: row.endAt ? toDateInput(row.endAt) : '',
+    conditions: [],
+    totalQuantity: row.totalQuantity,
+    soldQuantity: Math.min(sold, row.totalQuantity || sold),
+    memberOnly: row.memberOnly,
+    hot: row.isFeatured,
+    image: voucherImage('gift'),
+  };
 }
 
 /** Số lượt đã mua/đổi theo voucherId (kho thật). */
@@ -116,7 +148,7 @@ export async function getManagedVouchers(): Promise<Voucher[]> {
     const [byCode, counts] = await Promise.all([loadRows(), soldCounts()]);
     if (byCode.size === 0) return VOUCHERS;
 
-    return VOUCHERS.map((v) => {
+    const fromMock = VOUCHERS.map((v) => {
       const row = byCode.get(v.code);
       const sold = row ? (counts.get(row.id) ?? 0) : undefined;
       return mergeVoucher(v, row, sold);
@@ -125,6 +157,13 @@ export async function getManagedVouchers(): Promise<Voucher[]> {
       // Có bản ghi DB và không ở trạng thái ACTIVE → ẩn khỏi website.
       return row ? row.status === 'ACTIVE' : true;
     });
+
+    // Voucher do admin tạo mới (chỉ có trong DB), đang hiển thị.
+    const customs = [...byCode.values()]
+      .filter((row) => !MOCK_CODES.has(row.code) && row.status === 'ACTIVE')
+      .map((row) => dbRowToVoucher(row, counts.get(row.id) ?? 0));
+
+    return [...fromMock, ...customs];
   } catch {
     return VOUCHERS;
   }
@@ -142,7 +181,7 @@ export async function listVouchersForAdmin(): Promise<VoucherAdminRow[]> {
     counts = new Map();
   }
 
-  return VOUCHERS.map((base) => {
+  const fromMock: VoucherAdminRow[] = VOUCHERS.map((base) => {
     const row = byCode.get(base.code);
     const merged = mergeVoucher(base, row);
     return {
@@ -163,6 +202,30 @@ export async function listVouchersForAdmin(): Promise<VoucherAdminRow[]> {
       totalQuantity: base.totalQuantity,
     } satisfies VoucherAdminRow;
   });
+
+  const customs: VoucherAdminRow[] = [...byCode.values()]
+    .filter((row) => !MOCK_CODES.has(row.code))
+    .map((row) => {
+      const v = dbRowToVoucher(row, counts.get(row.id) ?? 0);
+      return {
+        code: v.code,
+        name: v.name,
+        description: v.description,
+        categoryLabel: 'Tự thêm',
+        discountType: v.discountType,
+        discountValue: v.discountValue,
+        minOrder: v.minOrder,
+        maxDiscount: v.maxDiscount ?? null,
+        expiresAt: v.expiresAt,
+        memberOnly: v.memberOnly,
+        hot: v.hot,
+        visible: row.status === 'ACTIVE',
+        soldCount: counts.get(row.id) ?? 0,
+        totalQuantity: v.totalQuantity,
+      } satisfies VoucherAdminRow;
+    });
+
+  return [...customs, ...fromMock];
 }
 
 /** Cập nhật (hoặc tạo mới) 1 voucher theo code. */
@@ -196,4 +259,45 @@ export async function updateVoucher(input: VoucherManagedInput) {
       status,
     },
   });
+}
+
+export interface CreateVoucherInput {
+  code: string;
+  name: string;
+  description: string;
+  discountType: 'percent' | 'amount';
+  discountValue: number;
+  minOrder: number;
+  maxDiscount?: number | null;
+  totalQuantity: number;
+  expiresAt?: string;
+  memberOnly: boolean;
+  hot: boolean;
+  visible: boolean;
+}
+
+/** Tạo voucher mới (do admin). Mã (code) phải chưa tồn tại. */
+export async function createVoucher(input: CreateVoucherInput): Promise<{ code: string }> {
+  const code = input.code.trim().toUpperCase();
+  if (MOCK_CODES.has(code)) throw new Error('DUPLICATE');
+  const existed = await prisma.voucher.findUnique({ where: { code }, select: { id: true } });
+  if (existed) throw new Error('DUPLICATE');
+
+  await prisma.voucher.create({
+    data: {
+      code,
+      name: input.name,
+      description: input.description,
+      discountType: input.discountType === 'amount' ? 'AMOUNT' : 'PERCENT',
+      discountValue: input.discountValue,
+      minOrder: input.minOrder,
+      maxDiscount: input.maxDiscount ?? null,
+      totalQuantity: input.totalQuantity,
+      endAt: input.expiresAt ? new Date(input.expiresAt) : null,
+      memberOnly: input.memberOnly,
+      isFeatured: input.hot,
+      status: input.visible ? 'ACTIVE' : 'INACTIVE',
+    },
+  });
+  return { code };
 }

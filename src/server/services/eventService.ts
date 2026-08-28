@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { eventBanner } from '@/constants/media';
 import { EVENTS } from '@/data/events';
 import { prisma } from '@/server/db';
 import type { GolfEvent } from '@/types';
@@ -51,10 +52,13 @@ interface DbEventRow {
   slug: string;
   title: string;
   summary: string | null;
+  description: string | null;
+  banner: string | null;
   location: string | null;
   fee: number;
   capacity: number;
   startsAt: Date;
+  endsAt: Date | null;
   isFeatured: boolean;
   isPublished: boolean;
 }
@@ -64,13 +68,45 @@ const SELECT = {
   slug: true,
   title: true,
   summary: true,
+  description: true,
+  banner: true,
   location: true,
   fee: true,
   capacity: true,
   startsAt: true,
+  endsAt: true,
   isFeatured: true,
   isPublished: true,
 } as const;
+
+const MOCK_SLUGS = new Set(EVENTS.map((e) => e.slug));
+
+/** Dựng 1 GolfEvent hoàn chỉnh cho sự kiện do admin tạo (chỉ có trong DB). */
+function dbRowToEvent(row: DbEventRow, registered: number): GolfEvent {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    type: 'tournament',
+    summary: row.summary ?? '',
+    description: row.description ?? row.summary ?? '',
+    banner: row.banner || eventBanner(1),
+    startsAt: toIsoVN(row.startsAt),
+    endsAt: row.endsAt ? toIsoVN(row.endsAt) : '',
+    location: row.location ?? '',
+    fee: row.fee,
+    capacity: row.capacity,
+    registered,
+    audience: '',
+    schedule: [],
+    rules: [],
+    benefits: [],
+    prizes: [],
+    sponsors: [],
+    participants: [],
+    faqs: [],
+  };
+}
 
 function mergeEvent(base: GolfEvent, row: DbEventRow | undefined, registered?: number): GolfEvent {
   if (!row) return { ...base, registered: registered ?? 0 };
@@ -105,7 +141,7 @@ async function registeredCounts(): Promise<Map<string, number>> {
 export async function getManagedEvents(): Promise<GolfEvent[]> {
   try {
     const [byslug, counts] = await Promise.all([loadRows(), registeredCounts()]);
-    return EVENTS.map((e) => {
+    const fromMock = EVENTS.map((e) => {
       const row = byslug.get(e.slug);
       const registered = row ? (counts.get(row.id) ?? 0) : 0;
       return mergeEvent(e, row, registered);
@@ -113,6 +149,13 @@ export async function getManagedEvents(): Promise<GolfEvent[]> {
       const row = byslug.get(e.slug);
       return row ? row.isPublished : true;
     });
+
+    // Sự kiện do admin tạo mới (chỉ có trong DB), đang hiển thị.
+    const customs = [...byslug.values()]
+      .filter((row) => !MOCK_SLUGS.has(row.slug) && row.isPublished)
+      .map((row) => dbRowToEvent(row, counts.get(row.id) ?? 0));
+
+    return [...fromMock, ...customs];
   } catch {
     return EVENTS;
   }
@@ -121,7 +164,6 @@ export async function getManagedEvents(): Promise<GolfEvent[]> {
 /** 1 sự kiện theo slug cho trang chi tiết (số chỗ đã đăng ký là THẬT). */
 export async function getManagedEvent(slug: string): Promise<GolfEvent | null> {
   const base = EVENTS.find((e) => e.slug === slug);
-  if (!base) return null;
   try {
     const row = await prisma.event.findFirst({ where: { slug, deletedAt: null }, select: SELECT });
     let registered = 0;
@@ -132,9 +174,15 @@ export async function getManagedEvent(slug: string): Promise<GolfEvent | null> {
       });
       registered = agg._sum.attendees ?? 0;
     }
-    return mergeEvent(base, row ?? undefined, registered);
+    if (base) {
+      if (row && !row.isPublished) return null; // sự kiện gốc đã bị ẩn
+      return mergeEvent(base, row ?? undefined, registered);
+    }
+    // Sự kiện do admin tạo.
+    if (row && row.isPublished) return dbRowToEvent(row, registered);
+    return null;
   } catch {
-    return base;
+    return base ?? null;
   }
 }
 
@@ -147,7 +195,7 @@ export async function listEventsForAdmin(): Promise<EventAdminRow[]> {
   } catch {
     byslug = new Map();
   }
-  return EVENTS.map((base) => {
+  const fromMock: EventAdminRow[] = EVENTS.map((base) => {
     const row = byslug.get(base.slug);
     const merged = mergeEvent(base, row);
     return {
@@ -163,6 +211,23 @@ export async function listEventsForAdmin(): Promise<EventAdminRow[]> {
       published: row ? row.isPublished : true,
     } satisfies EventAdminRow;
   });
+
+  const customs: EventAdminRow[] = [...byslug.values()]
+    .filter((row) => !MOCK_SLUGS.has(row.slug))
+    .map((row) => ({
+      slug: row.slug,
+      title: row.title,
+      summary: row.summary ?? '',
+      typeLabel: 'Tự thêm',
+      location: row.location ?? '',
+      fee: row.fee,
+      capacity: row.capacity,
+      startsAtLocal: toLocalInput(row.startsAt),
+      featured: row.isFeatured,
+      published: row.isPublished,
+    }));
+
+  return [...customs, ...fromMock];
 }
 
 /** Cập nhật (hoặc tạo) 1 sự kiện theo slug. */
@@ -193,4 +258,54 @@ export async function updateEvent(input: EventManagedInput) {
       isPublished: input.published,
     },
   });
+}
+
+export interface CreateEventInput {
+  title: string;
+  summary: string;
+  location: string;
+  fee: number;
+  capacity: number;
+  startsAtLocal: string;
+  featured: boolean;
+  published: boolean;
+}
+
+/** Bỏ dấu tiếng Việt + tạo slug an toàn. */
+function slugify(input: string): string {
+  return input
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+/** Tạo sự kiện mới (do admin). Trả về slug đã tạo. */
+export async function createEvent(input: CreateEventInput): Promise<{ slug: string }> {
+  const bases = slugify(input.title) || 'su-kien';
+  let slug = bases;
+  let n = 2;
+  while (MOCK_SLUGS.has(slug) || (await prisma.event.findUnique({ where: { slug }, select: { id: true } }))) {
+    slug = `${bases}-${n}`;
+    n += 1;
+  }
+
+  await prisma.event.create({
+    data: {
+      slug,
+      title: input.title,
+      summary: input.summary,
+      location: input.location,
+      fee: input.fee,
+      capacity: input.capacity,
+      startsAt: input.startsAtLocal ? fromLocalInput(input.startsAtLocal) : new Date('2026-01-01T00:00:00+07:00'),
+      isFeatured: input.featured,
+      isPublished: input.published,
+    },
+  });
+  return { slug };
 }

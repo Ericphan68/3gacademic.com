@@ -26,7 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata(props: PageProps<'/events/[slug]'>): Promise<Metadata> {
   const { slug } = await props.params;
-  const event = eventService.getBySlug(slug);
+  const event = await getManagedEvent(slug);
   if (!event) {
     return buildMetadata({
       title: 'Không tìm thấy sự kiện',
@@ -122,6 +122,7 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
             </div>
 
             {/* Lịch trình */}
+            {event.schedule.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Lịch trình</h2>
               <ol className="mt-6 space-y-4">
@@ -142,8 +143,10 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
                 ))}
               </ol>
             </div>
+            ) : null}
 
             {/* Điều lệ và đối tượng */}
+            {event.rules.length > 0 || event.benefits.length > 0 ? (
             <div className="grid gap-8 sm:grid-cols-2">
               <div>
                 <h2 className="rule-gold text-2xl">Điều lệ</h2>
@@ -168,8 +171,10 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
                 </ul>
               </div>
             </div>
+            ) : null}
 
             {/* Giải thưởng */}
+            {event.prizes.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Giải thưởng</h2>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -184,6 +189,7 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
                 ))}
               </ul>
             </div>
+            ) : null}
 
             {/* Thông tin nhanh */}
             <div>
@@ -204,6 +210,7 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
             </div>
 
             {/* Danh sách đăng ký */}
+            {event.participants.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Danh sách đăng ký</h2>
               <ul className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -221,8 +228,10 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
                 Danh sách hiển thị dạng rút gọn để bảo vệ thông tin cá nhân của người tham dự.
               </p>
             </div>
+            ) : null}
 
             {/* Nhà tài trợ */}
+            {event.sponsors.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Nhà tài trợ và đối tác</h2>
               <ul className="mt-6 flex flex-wrap gap-3">
@@ -236,13 +245,16 @@ export default async function EventDetailPage(props: PageProps<'/events/[slug]'>
                 ))}
               </ul>
             </div>
+            ) : null}
 
             {/* FAQ */}
+            {event.faqs.length > 0 ? (
             <div>
               <h2 className="rule-gold text-2xl">Câu hỏi thường gặp</h2>
               <FaqAccordion items={event.faqs} className="mt-4" />
               <FaqJsonLd items={event.faqs} />
             </div>
+            ) : null}
           </div>
 
           <aside className="lg:sticky lg:top-28 lg:self-start">

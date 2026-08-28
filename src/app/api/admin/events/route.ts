@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { getAdminSession } from '@/server/auth/current-admin';
 import { roleHasPermission } from '@/server/rbac';
-import { updateEvent } from '@/server/services/eventService';
+import { createEvent, updateEvent } from '@/server/services/eventService';
 
 const updateSchema = z.object({
   slug: z.string().trim().min(1),
@@ -38,8 +38,42 @@ export async function PUT(req: Request) {
   try {
     await updateEvent({ ...rest, startsAtLocal: startsAtLocal || undefined });
     revalidatePath('/events');
+    revalidatePath(`/events/${parsed.data.slug}`);
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Lỗi cập nhật sự kiện.' }, { status: 500 });
+  }
+}
+
+const createSchema = z.object({
+  title: z.string().trim().min(1).max(160),
+  summary: z.string().trim().max(500),
+  location: z.string().trim().max(200),
+  fee: z.number().int().min(0),
+  capacity: z.number().int().min(0),
+  startsAtLocal: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, 'Thời gian không hợp lệ'),
+  featured: z.boolean(),
+  published: z.boolean(),
+});
+
+export async function POST(req: Request) {
+  const session = await getAdminSession();
+  if (!session) return NextResponse.json({ error: 'Chưa đăng nhập.' }, { status: 401 });
+  if (!roleHasPermission(session.role, 'event.create')) {
+    return NextResponse.json({ error: 'Không có quyền tạo sự kiện.' }, { status: 403 });
+  }
+
+  const parsed = createSchema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ.' }, { status: 400 });
+  }
+
+  try {
+    const { slug } = await createEvent(parsed.data);
+    revalidatePath('/events');
+    revalidatePath(`/events/${slug}`);
+    return NextResponse.json({ ok: true, slug });
+  } catch {
+    return NextResponse.json({ error: 'Lỗi tạo sự kiện.' }, { status: 500 });
   }
 }

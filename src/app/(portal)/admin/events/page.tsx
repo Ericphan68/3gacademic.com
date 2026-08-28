@@ -14,7 +14,7 @@ export default async function AdminEventsPage() {
     <div>
       <PortalHeader
         title="Sự kiện & giải đấu"
-        description="Sửa tên, mô tả, thời gian, phí, sức chứa và bật/tắt hiển thị từng sự kiện. Bấm Lưu là trang /events cập nhật ngay."
+        description="Thêm sự kiện mới, sửa tên, mô tả, thời gian, phí, sức chứa và bật/tắt hiển thị từng sự kiện. Bấm Lưu/Tạo là trang /events cập nhật ngay."
         action={
           <Button asChild variant="outline">
             <Link href="/events" target="_blank" rel="noopener noreferrer">

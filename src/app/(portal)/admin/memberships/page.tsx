@@ -22,6 +22,7 @@ export default async function AdminMembershipsPage() {
     coachDiscountPercent: p.coachDiscountPercent,
     fnbDiscountPercent: p.fnbDiscountPercent,
     isFeatured: p.isFeatured,
+    isActive: p.isActive,
   }));
 
   return (

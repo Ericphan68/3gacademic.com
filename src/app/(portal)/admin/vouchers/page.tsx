@@ -14,7 +14,7 @@ export default async function AdminVouchersPage() {
     <div>
       <PortalHeader
         title="Voucher & ưu đãi"
-        description="Sửa nội dung, mức giảm, hạn dùng và bật/tắt hiển thị từng voucher. Bấm Lưu là trang /vouchers cập nhật ngay."
+        description="Thêm voucher mới, sửa nội dung, mức giảm, hạn dùng và bật/tắt hiển thị từng voucher. Bấm Lưu/Tạo là trang /vouchers cập nhật ngay."
         action={
           <Button asChild variant="outline">
             <Link href="/vouchers" target="_blank" rel="noopener noreferrer">
