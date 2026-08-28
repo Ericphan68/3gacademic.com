@@ -9,12 +9,7 @@ const schema = z.object({
   fullName: z.string().trim().min(2, 'Vui lòng nhập họ tên').max(120),
   email: z.string().trim().email('Email chưa đúng').max(160),
   phone: z.string().trim().regex(/^0\d{9}$/, 'SĐT gồm 10 số, bắt đầu bằng 0'),
-  password: z
-    .string()
-    .min(8, 'Mật khẩu tối thiểu 8 ký tự')
-    .max(100)
-    .regex(/[A-Z]/, 'Cần ít nhất 1 chữ hoa')
-    .regex(/[0-9]/, 'Cần ít nhất 1 chữ số'),
+  password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự').max(100),
 });
 
 export async function POST(req: Request) {

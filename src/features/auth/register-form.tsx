@@ -18,11 +18,7 @@ const schema = z
     fullName: z.string().min(2, 'Vui lòng nhập họ tên đầy đủ'),
     email: z.string().min(1, 'Vui lòng nhập email').email('Email chưa đúng định dạng'),
     phone: z.string().regex(/^0\d{9}$/, 'Số điện thoại gồm 10 chữ số, bắt đầu bằng 0'),
-    password: z
-      .string()
-      .min(8, 'Mật khẩu tối thiểu 8 ký tự')
-      .regex(/[A-Z]/, 'Cần ít nhất một chữ hoa')
-      .regex(/[0-9]/, 'Cần ít nhất một chữ số'),
+    password: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự'),
     confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
     accepted: z.literal(true, { message: 'Bạn cần đồng ý điều khoản để tiếp tục' }),
   })
@@ -33,11 +29,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
-const PASSWORD_RULES = [
-  { label: 'Tối thiểu 8 ký tự', test: (value: string) => value.length >= 8 },
-  { label: 'Có chữ hoa', test: (value: string) => /[A-Z]/.test(value) },
-  { label: 'Có chữ số', test: (value: string) => /[0-9]/.test(value) },
-];
+const PASSWORD_RULES = [{ label: 'Tối thiểu 6 ký tự', test: (value: string) => value.length >= 6 }];
 
 export function RegisterForm() {
   const router = useRouter();

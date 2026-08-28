@@ -7,12 +7,7 @@ import { adminResetCustomerPassword } from '@/server/services/customerAuthServic
 
 const schema = z.object({
   id: z.string().trim().min(1),
-  newPassword: z
-    .string()
-    .min(8, 'Mật khẩu tối thiểu 8 ký tự')
-    .max(100)
-    .regex(/[A-Z]/, 'Cần ít nhất 1 chữ hoa')
-    .regex(/[0-9]/, 'Cần ít nhất 1 chữ số'),
+  newPassword: z.string().min(6, 'Mật khẩu tối thiểu 6 ký tự').max(100),
 });
 
 export async function POST(req: Request) {
